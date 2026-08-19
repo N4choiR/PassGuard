@@ -20,7 +20,8 @@ from history import (
     delete_last_entry,
     get_history_count,
     format_entry_date,
-    history_privacy_note
+    history_privacy_note,
+    get_history_statistics
 )
 
 
@@ -62,7 +63,10 @@ def show_header():
 # YES / NO
 # ==========================================================
 
-def ask_yes_no(question, default=True):
+def ask_yes_no(
+    question,
+    default=True
+):
 
     while True:
 
@@ -80,6 +84,12 @@ def ask_yes_no(question, default=True):
             ).strip().lower()
 
         except KeyboardInterrupt:
+
+            print()
+
+            return default
+
+        except EOFError:
 
             print()
 
@@ -112,22 +122,48 @@ def ask_yes_no(question, default=True):
 # FORMAT SEARCH SPACE
 # ==========================================================
 
-def format_search_space(value):
+def format_search_space(
+    value
+):
 
     if not value:
 
         return "0"
 
-    return f"{value:.2e}"
+    try:
+
+        return f"{float(value):.2e}"
+
+    except (
+        TypeError,
+        ValueError
+    ):
+
+        return "0"
 
 
 # ==========================================================
 # STRENGTH BAR
 # ==========================================================
 
-def strength_bar(score):
+def strength_bar(
+    score
+):
 
     total = 20
+
+    try:
+
+        score = float(
+            score
+        )
+
+    except (
+        TypeError,
+        ValueError
+    ):
+
+        score = 0
 
     filled = round(
         score / 5
@@ -154,7 +190,9 @@ def strength_bar(score):
 # RATING ICON
 # ==========================================================
 
-def get_rating_icon(rating):
+def get_rating_icon(
+    rating
+):
 
     rating = str(
         rating
@@ -183,7 +221,10 @@ def get_rating_icon(rating):
 # SHOW CHECK
 # ==========================================================
 
-def show_check(label, value):
+def show_check(
+    label,
+    value
+):
 
     print(
         f"{label:<20}"
@@ -195,7 +236,9 @@ def show_check(label, value):
 # UNIQUE ITEMS
 # ==========================================================
 
-def unique_items(items):
+def unique_items(
+    items
+):
 
     result = []
 
@@ -214,7 +257,10 @@ def unique_items(items):
 # SHOW ANALYSIS
 # ==========================================================
 
-def show_analysis(result, password):
+def show_analysis(
+    result,
+    password
+):
 
     checks = result.get(
         "checks",
@@ -228,6 +274,10 @@ def show_analysis(result, password):
     )
 
     print(LINE)
+
+    # ======================================================
+    # BASIC CHECKS
+    # ======================================================
 
     print(
         f"{'Length':<20}"
@@ -624,6 +674,10 @@ def get_generator_settings():
 
     print(LINE)
 
+    # ======================================================
+    # PASSWORD LENGTH
+    # ======================================================
+
     while True:
 
         try:
@@ -690,6 +744,10 @@ def get_generator_settings():
 
         break
 
+    # ======================================================
+    # CHARACTER TYPES
+    # ======================================================
+
     print()
 
     use_uppercase = ask_yes_no(
@@ -711,6 +769,10 @@ def get_generator_settings():
         "Use symbols?",
         True
     )
+
+    # ======================================================
+    # VALIDATION
+    # ======================================================
 
     if not any(
         (
@@ -754,7 +816,9 @@ def get_generator_settings():
 # CREATE GENERATOR
 # ==========================================================
 
-def create_generator(settings):
+def create_generator(
+    settings
+):
 
     return PasswordGenerator(
 
@@ -777,6 +841,7 @@ def create_generator(settings):
         use_symbols=settings[
             "use_symbols"
         ]
+
     )
 
 
@@ -822,12 +887,16 @@ def generate_password():
         password
     )
 
+    # ======================================================
+    # ANALYZE GENERATED PASSWORD
+    # ======================================================
+
     result = PasswordAnalyzer(
         password
     ).analyze()
 
     # ======================================================
-    # SAVE GENERATED PASSWORD HISTORY
+    # SAVE HISTORY
     # ======================================================
 
     try:
@@ -909,6 +978,10 @@ def generate_batch_passwords():
 
         return
 
+    # ======================================================
+    # PASSWORD COUNT
+    # ======================================================
+
     while True:
 
         try:
@@ -975,6 +1048,10 @@ def generate_batch_passwords():
 
         break
 
+    # ======================================================
+    # GENERATE
+    # ======================================================
+
     try:
 
         generator = create_generator(
@@ -994,6 +1071,10 @@ def generate_batch_passwords():
         )
 
         return
+
+    # ======================================================
+    # RESULTS
+    # ======================================================
 
     print()
 
@@ -1051,6 +1132,10 @@ def generate_batch_passwords():
             f"({score}/100)"
         )
 
+    # ======================================================
+    # PRIVACY
+    # ======================================================
+
     print()
 
     print(LINE)
@@ -1083,6 +1168,10 @@ def export_report():
     )
 
     print()
+
+    # ======================================================
+    # PASSWORD INPUT
+    # ======================================================
 
     try:
 
@@ -1120,11 +1209,19 @@ def export_report():
 
         return
 
+    # ======================================================
+    # ANALYSIS
+    # ======================================================
+
     analyzer = PasswordAnalyzer(
         password
     )
 
     result = analyzer.analyze()
+
+    # ======================================================
+    # REPORT FORMAT
+    # ======================================================
 
     print()
 
@@ -1173,6 +1270,10 @@ def export_report():
         )
 
         return
+
+    # ======================================================
+    # SAVE REPORT
+    # ======================================================
 
     try:
 
@@ -1264,6 +1365,10 @@ def export_report():
 
         return
 
+    # ======================================================
+    # PRIVACY
+    # ======================================================
+
     print()
 
     print(
@@ -1275,7 +1380,153 @@ def export_report():
 
 
 # ==========================================================
-# HISTORY
+# SHOW HISTORY STATISTICS
+# ==========================================================
+
+def show_history_statistics():
+
+    statistics = (
+        get_history_statistics()
+    )
+
+    total = statistics[
+        "total"
+    ]
+
+    print()
+
+    print(
+        "History Statistics"
+    )
+
+    print(LINE)
+
+    if total == 0:
+
+        print(
+            "No statistics available."
+        )
+
+        print()
+
+        print(
+            "Analyze or generate a password first."
+        )
+
+        print()
+
+        return
+
+    # ======================================================
+    # RECORD COUNTS
+    # ======================================================
+
+    print(
+        f"{'Total records':<20}"
+        f"{statistics['total']}"
+    )
+
+    print(
+        f"{'Analysis records':<20}"
+        f"{statistics['analysis']}"
+    )
+
+    print(
+        f"{'Generated records':<20}"
+        f"{statistics['generated']}"
+    )
+
+    # ======================================================
+    # AVERAGES
+    # ======================================================
+
+    print()
+
+    print(
+        f"{'Average score':<20}"
+        f"{statistics['average_score']}/100"
+    )
+
+    print(
+        f"{'Average entropy':<20}"
+        f"{statistics['average_entropy']} bits"
+    )
+
+    # ======================================================
+    # SECURITY RATINGS
+    # ======================================================
+
+    print()
+
+    print(
+        "Security Ratings"
+    )
+
+    print(LINE)
+
+    print(
+        f"{'Very Strong':<20}"
+        f"{statistics['very_strong']}"
+    )
+
+    print(
+        f"{'Strong':<20}"
+        f"{statistics['strong']}"
+    )
+
+    print(
+        f"{'Medium':<20}"
+        f"{statistics['medium']}"
+    )
+
+    print(
+        f"{'Weak':<20}"
+        f"{statistics['weak']}"
+    )
+
+    print(
+        f"{'Very Weak':<20}"
+        f"{statistics['very_weak']}"
+    )
+
+    # ======================================================
+    # SCORE OVERVIEW
+    # ======================================================
+
+    print()
+
+    print(
+        "Score Overview"
+    )
+
+    print(LINE)
+
+    print(
+        f"{'Best score':<20}"
+        f"{statistics['best_score']}/100"
+    )
+
+    print(
+        f"{'Lowest score':<20}"
+        f"{statistics['lowest_score']}/100"
+    )
+
+    # ======================================================
+    # PRIVACY
+    # ======================================================
+
+    print()
+
+    print(
+        "Privacy: Passwords themselves are "
+        "never stored in statistics."
+    )
+
+    print()
+
+
+# ==========================================================
+# SHOW HISTORY
 # ==========================================================
 
 def show_history():
@@ -1292,6 +1543,10 @@ def show_history():
 
         history = load_history()
 
+        # ==================================================
+        # EMPTY HISTORY
+        # ==================================================
+
         if not history:
 
             print(
@@ -1305,6 +1560,10 @@ def show_history():
                 "appear here automatically."
             )
 
+        # ==================================================
+        # HISTORY RECORDS
+        # ==================================================
+
         else:
 
             print(
@@ -1312,10 +1571,6 @@ def show_history():
             )
 
             print()
-
-            # ==================================================
-            # SHOW HISTORY
-            # ==================================================
 
             for index, entry in enumerate(
                 reversed(history),
@@ -1327,12 +1582,17 @@ def show_history():
                     "analysis"
                 )
 
-                action_text = (
-                    "Analysis"
-                    if action == "analysis"
-                    else
-                    "Generated"
-                )
+                if action == "generated":
+
+                    action_text = (
+                        "Generated"
+                    )
+
+                else:
+
+                    action_text = (
+                        "Analysis"
+                    )
 
                 rating = entry.get(
                     "rating",
@@ -1373,11 +1633,13 @@ def show_history():
                 )
 
                 print(
-                    f"    Length: {length} characters"
+                    f"    Length: "
+                    f"{length} characters"
                 )
 
                 print(
-                    f"    Entropy: {entropy} bits"
+                    f"    Entropy: "
+                    f"{entropy} bits"
                 )
 
                 print(
@@ -1392,7 +1654,8 @@ def show_history():
                 )
 
                 print(
-                    f"    Crack resistance: {crack}"
+                    f"    Crack resistance: "
+                    f"{crack}"
                 )
 
                 patterns = entry.get(
@@ -1423,7 +1686,8 @@ def show_history():
             print()
 
             print(
-                f"Privacy: {history_privacy_note()}"
+                f"Privacy: "
+                f"{history_privacy_note()}"
             )
 
         # ======================================================
@@ -1443,11 +1707,15 @@ def show_history():
         )
 
         print(
-            "2. Delete Last Record"
+            "2. View Statistics"
         )
 
         print(
-            "3. Clear All History"
+            "3. Delete Last Record"
+        )
+
+        print(
+            "4. Clear All History"
         )
 
         print()
@@ -1479,10 +1747,33 @@ def show_history():
             return
 
         # ======================================================
-        # DELETE LAST
+        # STATISTICS
         # ======================================================
 
         elif choice == "2":
+
+            show_history_statistics()
+
+            try:
+
+                input(
+                    "Press Enter to continue..."
+                )
+
+            except (
+                KeyboardInterrupt,
+                EOFError
+            ):
+
+                print()
+
+                return
+
+        # ======================================================
+        # DELETE LAST
+        # ======================================================
+
+        elif choice == "3":
 
             if not history:
 
@@ -1494,16 +1785,10 @@ def show_history():
 
                 continue
 
-            try:
-
-                confirm = ask_yes_no(
-                    "Delete the latest history record?",
-                    False
-                )
-
-            except Exception:
-
-                confirm = False
+            confirm = ask_yes_no(
+                "Delete the latest history record?",
+                False
+            )
 
             if not confirm:
 
@@ -1515,27 +1800,41 @@ def show_history():
 
                 continue
 
-            if delete_last_entry():
+            try:
 
-                print()
-
-                print(
-                    "✓ Latest history record deleted."
+                deleted = (
+                    delete_last_entry()
                 )
 
-            else:
+                if deleted:
+
+                    print()
+
+                    print(
+                        "✓ Latest history record deleted."
+                    )
+
+                else:
+
+                    print()
+
+                    print(
+                        "Could not delete history record."
+                    )
+
+            except OSError as error:
 
                 print()
 
                 print(
-                    "Could not delete history record."
+                    f"Error deleting history: {error}"
                 )
 
         # ======================================================
         # CLEAR ALL
         # ======================================================
 
-        elif choice == "3":
+        elif choice == "4":
 
             if not history:
 
@@ -1592,6 +1891,10 @@ def show_history():
                 print(
                     f"Error clearing history: {error}"
                 )
+
+        # ======================================================
+        # INVALID
+        # ======================================================
 
         else:
 
