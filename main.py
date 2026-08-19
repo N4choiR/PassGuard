@@ -24,21 +24,10 @@ def show_header():
 
     print()
 
-    print(
-        "╔══════════════════════════════════════╗"
-    )
-
-    print(
-        "║          🔐 PASSGUARD               ║"
-    )
-
-    print(
-        "║     Password Security Suite         ║"
-    )
-
-    print(
-        "╚══════════════════════════════════════╝"
-    )
+    print("╔══════════════════════════════════════╗")
+    print("║          🔐 PASSGUARD               ║")
+    print("║     Password Security Suite         ║")
+    print("╚══════════════════════════════════════╝")
 
     print()
 
@@ -51,38 +40,22 @@ def ask_yes_no(question, default=True):
 
     while True:
 
-        default_text = (
-            "Y/n"
-            if default
-            else
-            "y/N"
-        )
+        default_text = "Y/n" if default else "y/N"
 
         answer = input(
             f"{question} [{default_text}]: "
         ).strip().lower()
 
         if not answer:
-
             return default
 
-        if answer in (
-            "y",
-            "yes"
-        ):
-
+        if answer in ("y", "yes"):
             return True
 
-        if answer in (
-            "n",
-            "no"
-        ):
-
+        if answer in ("n", "no"):
             return False
 
-        print(
-            "Please enter Y or N."
-        )
+        print("Please enter Y or N.")
 
 
 # ==========================================================
@@ -91,8 +64,7 @@ def ask_yes_no(question, default=True):
 
 def format_search_space(value):
 
-    if value == 0:
-
+    if not value:
         return "0"
 
     return f"{value:.2e}"
@@ -106,24 +78,52 @@ def strength_bar(score):
 
     total = 20
 
-    filled = round(
-        score / 5
-    )
+    filled = round(score / 5)
 
     filled = max(
         0,
-        min(
-            total,
-            filled
-        )
+        min(total, filled)
     )
 
     return (
         "█" * filled
         +
-        "░" * (
-            total - filled
-        )
+        "░" * (total - filled)
+    )
+
+
+# ==========================================================
+# RATING ICON
+# ==========================================================
+
+def get_rating_icon(rating):
+
+    rating = rating.upper()
+
+    if rating == "VERY STRONG":
+        return "🟢"
+
+    if rating == "STRONG":
+        return "🟢"
+
+    if rating == "MEDIUM":
+        return "🟡"
+
+    if rating == "WEAK":
+        return "🟠"
+
+    return "🔴"
+
+
+# ==========================================================
+# SHOW CHECK
+# ==========================================================
+
+def show_check(label, value):
+
+    print(
+        f"{label:<20}"
+        f"{'✓' if value else '✗'}"
     )
 
 
@@ -131,86 +131,87 @@ def strength_bar(score):
 # SHOW ANALYSIS
 # ==========================================================
 
-def show_analysis(result):
+def show_analysis(result, password):
 
-    checks = result["checks"]
+    checks = result.get("checks", {})
 
     print()
 
-    print(
-        "Security Analysis"
-    )
-
+    print("Security Analysis")
     print(LINE)
 
-    print(
-        f"Length              "
-        f"{result['length']} characters"
-    )
+    # ======================================================
+    # BASIC CHECKS
+    # ======================================================
 
     print(
-        f"Uppercase           "
-        f"{'✓' if checks['uppercase'] else '✗'}"
+        f"{'Length':<20}"
+        f"{len(password)} characters"
     )
 
-    print(
-        f"Lowercase           "
-        f"{'✓' if checks['lowercase'] else '✗'}"
+    show_check(
+        "Uppercase",
+        checks.get("uppercase", False)
     )
 
-    print(
-        f"Numbers             "
-        f"{'✓' if checks['numbers'] else '✗'}"
+    show_check(
+        "Lowercase",
+        checks.get("lowercase", False)
     )
 
-    print(
-        f"Symbols             "
-        f"{'✓' if checks['symbols'] else '✗'}"
+    show_check(
+        "Numbers",
+        checks.get("numbers", False)
     )
 
-    print(
-        f"Character diversity "
-        f"{'✓' if checks['diversity'] else '✗'}"
+    show_check(
+        "Symbols",
+        checks.get("symbols", False)
     )
 
-    print(
-        f"Common password     "
-        f"{'✓' if checks['common'] else '✗'}"
+    show_check(
+        "Character diversity",
+        checks.get("diversity", False)
     )
 
-    print(
-        f"Patterns            "
-        f"{'✓' if checks['patterns'] else '✗'}"
+    show_check(
+        "Common password",
+        checks.get("common", True)
     )
 
-    print(
-        f"Repetition          "
-        f"{'✓' if checks['repetition'] else '✗'}"
+    show_check(
+        "Patterns",
+        checks.get("patterns", True)
     )
 
-    print(
-        f"Sequences           "
-        f"{'✓' if checks['sequences'] else '✗'}"
+    show_check(
+        "Repetition",
+        checks.get("repetition", True)
     )
 
-    print(
-        f"Predictability      "
-        f"{'✓' if checks['predictability'] else '✗'}"
+    show_check(
+        "Sequences",
+        checks.get("sequences", True)
     )
 
-    print(
-        f"Keyboard pattern    "
-        f"{'✓' if checks['keyboard'] else '✗'}"
+    show_check(
+        "Predictability",
+        checks.get("predictability", True)
     )
 
-    print(
-        f"Leetspeak           "
-        f"{'✓' if checks['leetspeak'] else '✗'}"
+    show_check(
+        "Keyboard pattern",
+        checks.get("keyboard", True)
     )
 
-    print(
-        f"Year pattern        "
-        f"{'✓' if checks['year'] else '✗'}"
+    show_check(
+        "Leetspeak",
+        checks.get("leetspeak", True)
+    )
+
+    show_check(
+        "Year pattern",
+        checks.get("year", True)
     )
 
     # ======================================================
@@ -220,37 +221,39 @@ def show_analysis(result):
     print()
 
     print(
-        f"Character pool      "
-        f"{result['character_pool']}"
+        f"{'Character pool':<20}"
+        f"{result.get('character_pool', 0)}"
     )
 
     print(
-        f"Entropy             "
-        f"{result['entropy']} bits"
+        f"{'Entropy':<20}"
+        f"{result.get('entropy', 0)} bits"
     )
 
     print(
-        f"Search space        "
-        f"{format_search_space(result['search_space'])}"
+        f"{'Search space':<20}"
+        f"{format_search_space(result.get('search_space', 0))}"
     )
 
     print(
-        f"Crack resistance    "
-        f"{result['crack_resistance']}"
+        f"{'Crack resistance':<20}"
+        f"{result.get('crack_resistance', 'Unknown')}"
     )
 
     # ======================================================
     # CRACK TIME
     # ======================================================
 
-    if "crack_times" in result:
+    crack_times = result.get(
+        "crack_times",
+        {}
+    )
+
+    if crack_times:
 
         print()
 
-        print(
-            "Crack Time Estimate"
-        )
-
+        print("Crack Time Estimate")
         print(LINE)
 
         print(
@@ -260,70 +263,81 @@ def show_analysis(result):
 
         print()
 
-        crack_times = result[
-            "crack_times"
-        ]
-
         print(
-            f"Online attack       "
-            f"{crack_times['online']}"
+            f"{'Online attack':<20}"
+            f"{crack_times.get('online', 'Unknown')}"
         )
 
         print(
-            f"Slow offline attack "
-            f"{crack_times['slow_offline']}"
+            f"{'Slow offline attack':<20}"
+            f"{crack_times.get('slow_offline', 'Unknown')}"
         )
 
         print(
-            f"Fast offline attack "
-            f"{crack_times['fast_offline']}"
+            f"{'Fast offline attack':<20}"
+            f"{crack_times.get('fast_offline', 'Unknown')}"
         )
 
         print(
-            f"Massive GPU attack  "
-            f"{crack_times['massive_gpu']}"
+            f"{'Massive GPU attack':<20}"
+            f"{crack_times.get('massive_gpu', 'Unknown')}"
         )
 
     # ======================================================
     # STRENGTH
     # ======================================================
 
-    print()
-
-    print(
-        "Strength"
-    )
-
-    print(
-        f"{strength_bar(result['score'])} "
-        f"{result['score']}/100"
-    )
+    score = result.get("score", 0)
 
     print()
 
+    print("Strength")
+
     print(
-        f"Rating: {result['rating']}"
+        f"{strength_bar(score)} "
+        f"{score}/100"
+    )
+
+    rating = result.get(
+        "rating",
+        "UNKNOWN"
+    )
+
+    print()
+
+    print(
+        f"Rating: "
+        f"{get_rating_icon(rating)} "
+        f"{rating}"
     )
 
     # ======================================================
     # DETECTED PATTERNS
     # ======================================================
 
-    detected = result[
-        "detected_patterns"
-    ]
+    detected = result.get(
+        "detected_patterns",
+        []
+    )
 
     if detected:
 
         print()
 
-        print(
-            "Detected patterns"
-        )
-
+        print("Detected patterns")
         print(LINE)
 
+        unique_patterns = []
+
         for pattern in detected:
+
+            if pattern not in unique_patterns:
+
+                unique_patterns.append(
+                    pattern
+                )
+
+        for pattern in unique_patterns:
 
             print(
                 f"⚠ {pattern}"
@@ -333,29 +347,27 @@ def show_analysis(result):
     # RECOMMENDATIONS
     # ======================================================
 
-    issues = result[
-        "issues"
-    ]
+    issues = result.get(
+        "issues",
+        []
+    )
 
-    if issues:
+    unique_issues = []
+
+    for issue in issues:
+
+        if issue not in unique_issues:
+
+            unique_issues.append(
+                issue
+            )
+
+    if unique_issues:
 
         print()
 
-        print(
-            "Recommendations"
-        )
-
+        print("Recommendations")
         print(LINE)
-
-        unique_issues = []
-
-        for issue in issues:
-
-            if issue not in unique_issues:
-
-                unique_issues.append(
-                    issue
-                )
 
         for issue in unique_issues:
 
@@ -393,10 +405,7 @@ def analyze_password():
 
     print()
 
-    print(
-        "Password Analysis"
-    )
-
+    print("Password Analysis")
     print(LINE)
 
     print(
@@ -409,9 +418,18 @@ def analyze_password():
 
     print()
 
-    password = getpass.getpass(
-        "Enter password: "
-    )
+    try:
+
+        password = getpass.getpass(
+            "Enter password: "
+        )
+
+    except KeyboardInterrupt:
+
+        print()
+        print()
+        print("Operation cancelled.")
+        return
 
     if not password:
 
@@ -429,14 +447,9 @@ def analyze_password():
 
     result = analyzer.analyze()
 
-    if "length" not in result:
-
-        result["length"] = len(
-            password
-        )
-
     show_analysis(
-        result
+        result,
+        password
     )
 
 
@@ -448,10 +461,7 @@ def get_generator_settings():
 
     print()
 
-    print(
-        "Password Generator"
-    )
-
+    print("Password Generator")
     print(LINE)
 
     # ======================================================
@@ -472,9 +482,7 @@ def get_generator_settings():
 
         try:
 
-            length = int(
-                value
-            )
+            length = int(value)
 
         except ValueError:
 
@@ -529,12 +537,12 @@ def get_generator_settings():
     )
 
     if not any(
-        [
+        (
             use_uppercase,
             use_lowercase,
             use_numbers,
             use_symbols
-        ]
+        )
     ):
 
         print()
@@ -547,82 +555,57 @@ def get_generator_settings():
         return None
 
     return {
-
-        "length":
-            length,
-
-        "use_uppercase":
-            use_uppercase,
-
-        "use_lowercase":
-            use_lowercase,
-
-        "use_numbers":
-            use_numbers,
-
-        "use_symbols":
-            use_symbols
-
+        "length": length,
+        "use_uppercase": use_uppercase,
+        "use_lowercase": use_lowercase,
+        "use_numbers": use_numbers,
+        "use_symbols": use_symbols
     }
 
 
 # ==========================================================
-# GET RATING ICON
+# CREATE GENERATOR
 # ==========================================================
 
-def get_rating_icon(rating):
+def create_generator(settings):
 
-    rating = rating.upper()
-
-    if rating == "VERY STRONG":
-
-        return "🟢"
-
-    if rating == "STRONG":
-
-        return "🟢"
-
-    if rating == "MEDIUM":
-
-        return "🟡"
-
-    if rating == "WEAK":
-
-        return "🟠"
-
-    return "🔴"
+    return PasswordGenerator(
+        length=settings["length"],
+        use_uppercase=settings["use_uppercase"],
+        use_lowercase=settings["use_lowercase"],
+        use_numbers=settings["use_numbers"],
+        use_symbols=settings["use_symbols"]
+    )
 
 
 # ==========================================================
-# GENERATE PASSWORD
+# ANALYZE GENERATED PASSWORD
+# ==========================================================
+
+def analyze_generated_password(password):
+
+    analyzer = PasswordAnalyzer(
+        password
+    )
+
+    return analyzer.analyze()
+
+
+# ==========================================================
+# GENERATE SINGLE PASSWORD
 # ==========================================================
 
 def generate_password():
 
-    settings = (
-        get_generator_settings()
-    )
+    settings = get_generator_settings()
 
     if settings is None:
-
         return
 
     try:
 
-        generator = PasswordGenerator(
-            length=settings["length"],
-            use_uppercase=settings[
-                "use_uppercase"
-            ],
-            use_lowercase=settings[
-                "use_lowercase"
-            ],
-            use_numbers=settings[
-                "use_numbers"
-            ],
-            use_symbols=settings[
-                "use_symbols"
-            ],
+        generator = create_generator(
+            settings
         )
 
         password = generator.generate()
@@ -643,52 +626,36 @@ def generate_password():
 
     print()
 
-    print(
-        "Generated Password"
-    )
-
+    print("Generated Password")
     print(LINE)
 
-    print(
-        password
-    )
+    print(password)
 
     # ======================================================
-    # ANALYZE GENERATED PASSWORD
+    # SECURITY ANALYSIS
     # ======================================================
 
-    analyzer = PasswordAnalyzer(
+    result = analyze_generated_password(
         password
     )
-
-    result = analyzer.analyze()
-
-    if "length" not in result:
-
-        result["length"] = len(
-            password
-        )
 
     print()
 
-    print(
-        "Security Analysis"
-    )
-
+    print("Security Analysis")
     print(LINE)
 
     print(
-        f"Length:             "
-        f"{result['length']}"
+        f"{'Length:':<20}"
+        f"{len(password)}"
     )
 
     print(
-        f"Entropy:            "
+        f"{'Entropy:':<20}"
         f"{result['entropy']} bits"
     )
 
     print(
-        f"Crack resistance:   "
+        f"{'Crack resistance:':<20}"
         f"{result['crack_resistance']}"
     )
 
@@ -722,22 +689,10 @@ def generate_password():
 
 
 # ==========================================================
-# BATCH PASSWORD GENERATOR
+# GET PASSWORD COUNT
 # ==========================================================
 
-def generate_batch_passwords():
-
-    settings = (
-        get_generator_settings()
-    )
-
-    if settings is None:
-
-        return
-
-    # ======================================================
-    # COUNT
-    # ======================================================
+def get_password_count():
 
     while True:
 
@@ -747,15 +702,11 @@ def generate_batch_passwords():
 
         if not value:
 
-            count = 5
-
-            break
+            return 5
 
         try:
 
-            count = int(
-                value
-            )
+            count = int(value)
 
         except ValueError:
 
@@ -781,28 +732,28 @@ def generate_batch_passwords():
 
             continue
 
-        break
+        return count
 
-    # ======================================================
-    # GENERATOR
-    # ======================================================
+
+# ==========================================================
+# GENERATE MULTIPLE PASSWORDS
+# ==========================================================
+
+def generate_batch_passwords():
+
+    settings = get_generator_settings()
+
+    if settings is None:
+        return
+
+    print()
+
+    count = get_password_count()
 
     try:
 
-        generator = PasswordGenerator(
-            length=settings["length"],
-            use_uppercase=settings[
-                "use_uppercase"
-            ],
-            use_lowercase=settings[
-                "use_lowercase"
-            ],
-            use_numbers=settings[
-                "use_numbers"
-            ],
-            use_symbols=settings[
-                "use_symbols"
-            ],
+        generator = create_generator(
+            settings
         )
 
         passwords = generator.generate_many(
@@ -825,10 +776,7 @@ def generate_batch_passwords():
 
     print()
 
-    print(
-        "Generated Passwords"
-    )
-
+    print("Generated Passwords")
     print(LINE)
 
     for index, password in enumerate(
@@ -836,19 +784,12 @@ def generate_batch_passwords():
         start=1
     ):
 
-        analyzer = PasswordAnalyzer(
+        result = analyze_generated_password(
             password
         )
 
-        result = analyzer.analyze()
-
-        rating = result[
-            "rating"
-        ]
-
-        score = result[
-            "score"
-        ]
+        rating = result["rating"]
+        score = result["score"]
 
         icon = get_rating_icon(
             rating
@@ -861,7 +802,8 @@ def generate_batch_passwords():
         )
 
         print(
-            f"    {icon} {rating} "
+            f"    {icon} "
+            f"{rating} "
             f"({score}/100)"
         )
 
@@ -882,7 +824,32 @@ def generate_batch_passwords():
 
 
 # ==========================================================
-# MAIN MENU
+# MENU
+# ==========================================================
+
+def show_menu():
+
+    print(
+        "1. Analyze Password"
+    )
+
+    print(
+        "2. Generate Password"
+    )
+
+    print(
+        "3. Generate Multiple Passwords"
+    )
+
+    print(
+        "4. Exit"
+    )
+
+    print()
+
+
+# ==========================================================
+# MAIN
 # ==========================================================
 
 def main():
@@ -891,27 +858,23 @@ def main():
 
         show_header()
 
-        print(
-            "1. Analyze Password"
-        )
+        show_menu()
 
-        print(
-            "2. Generate Password"
-        )
+        try:
 
-        print(
-            "3. Generate Multiple Passwords"
-        )
+            choice = input(
+                "Select option: "
+            ).strip()
 
-        print(
-            "4. Exit"
-        )
+        except KeyboardInterrupt:
 
-        print()
-
-        choice = input(
-            "Select option: "
-        ).strip()
+            print()
+            print()
+            print(
+                "Thank you for using PassGuard. 🔐"
+            )
+            print()
+            break
 
         # ==================================================
         # ANALYZE
@@ -954,7 +917,7 @@ def main():
             break
 
         # ==================================================
-        # INVALID
+        # INVALID OPTION
         # ==================================================
 
         else:
