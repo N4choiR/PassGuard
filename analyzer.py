@@ -58,6 +58,8 @@ class PasswordAnalyzer:
 
         self.diversity_score = 0
 
+        self.crack_times = {}
+
     # ======================================================
     # ANALYZE
     # ======================================================
@@ -95,6 +97,8 @@ class PasswordAnalyzer:
         self.calculate_entropy()
 
         self.calculate_search_space()
+
+        self.calculate_crack_times()
 
         self.calculate_score()
 
@@ -494,7 +498,7 @@ class PasswordAnalyzer:
         return "".join(result)
 
     # ======================================================
-    # LEETSPEAK DETECTION
+    # LEETSPEAK
     # ======================================================
 
     def check_leetspeak(self):
@@ -514,13 +518,9 @@ class PasswordAnalyzer:
 
             return
 
-        found = False
-
         for pattern in LEET_PATTERNS:
 
             if pattern in normalized:
-
-                found = True
 
                 self.detected_patterns.append(
                     f"Leetspeak pattern: {pattern}"
@@ -532,9 +532,11 @@ class PasswordAnalyzer:
                     "Password uses a predictable leetspeak transformation."
                 )
 
-                break
+                self.checks["leetspeak"] = False
 
-        self.checks["leetspeak"] = not found
+                return
+
+        self.checks["leetspeak"] = True
 
     # ======================================================
     # YEAR PATTERN
@@ -572,10 +574,6 @@ class PasswordAnalyzer:
                 self.checks["year"] = False
 
                 return
-
-        # ==================================================
-        # SHAMSI YEARS
-        # ==================================================
 
         shamsi_years = re.findall(
             r"(13\d{2}|14\d{2})",
@@ -701,13 +699,11 @@ class PasswordAnalyzer:
             return
 
         self.entropy = round(
-
             len(self.password)
             *
             math.log2(
                 self.character_pool
             ),
-
             2
         )
 
@@ -730,13 +726,163 @@ class PasswordAnalyzer:
         )
 
     # ======================================================
-    # FINAL SCORE
+    # CRACK TIMES
+    # ======================================================
+
+    def calculate_crack_times(self):
+
+        if self.search_space <= 0:
+
+            self.crack_times = {
+
+                "online": 0,
+
+                "slow_offline": 0,
+
+                "fast_offline": 0,
+
+                "massive_gpu": 0
+
+            }
+
+            return
+
+        online_rate = 100
+
+        slow_offline_rate = 100_000
+
+        fast_offline_rate = 10_000_000_000
+
+        massive_gpu_rate = 1_000_000_000_000
+
+        average_search_space = (
+            self.search_space / 2
+        )
+
+        self.crack_times = {
+
+            "online":
+                average_search_space
+                /
+                online_rate,
+
+            "slow_offline":
+                average_search_space
+                /
+                slow_offline_rate,
+
+            "fast_offline":
+                average_search_space
+                /
+                fast_offline_rate,
+
+            "massive_gpu":
+                average_search_space
+                /
+                massive_gpu_rate
+
+        }
+
+    # ======================================================
+    # FORMAT CRACK TIME
+    # ======================================================
+
+    def format_crack_time(self, seconds):
+
+        if seconds < 1:
+
+            return "Less than a second"
+
+        if seconds < 60:
+
+            return (
+                f"{round(seconds, 1)} seconds"
+            )
+
+        minutes = seconds / 60
+
+        if minutes < 60:
+
+            return (
+                f"{round(minutes, 1)} minutes"
+            )
+
+        hours = minutes / 60
+
+        if hours < 24:
+
+            return (
+                f"{round(hours, 1)} hours"
+            )
+
+        days = hours / 24
+
+        if days < 365:
+
+            return (
+                f"{round(days, 1)} days"
+            )
+
+        years = days / 365
+
+        if years < 1000:
+
+            return (
+                f"{round(years, 1)} years"
+            )
+
+        if years < 1_000_000:
+
+            return (
+                f"{round(years / 1000, 1)} thousand years"
+            )
+
+        if years < 1_000_000_000:
+
+            return (
+                f"{round(years / 1_000_000, 1)} million years"
+            )
+
+        return (
+            f"{round(years / 1_000_000_000, 1)} billion years"
+        )
+
+    # ======================================================
+    # CRACK RESISTANCE
+    # ======================================================
+
+    def get_crack_resistance(self):
+
+        if self.entropy < 30:
+
+            return "Very low"
+
+        if self.entropy < 50:
+
+            return "Low"
+
+        if self.entropy < 70:
+
+            return "Moderate"
+
+        if self.entropy < 90:
+
+            return "High"
+
+        if self.entropy < 110:
+
+            return "Very high"
+
+        return "Extremely high"
+
+    # ======================================================
+    # CALCULATE SCORE
     # ======================================================
 
     def calculate_score(self):
 
         # ==================================================
-        # LENGTH
+        # LENGTH SCORE
         # ==================================================
 
         if len(self.password) >= 20:
@@ -768,7 +914,7 @@ class PasswordAnalyzer:
             length_score = 0
 
         # ==================================================
-        # CHARACTER DIVERSITY
+        # DIVERSITY SCORE
         # ==================================================
 
         diversity_score = 0
@@ -802,7 +948,7 @@ class PasswordAnalyzer:
             diversity_score += 5
 
         # ==================================================
-        # ENTROPY
+        # ENTROPY SCORE
         # ==================================================
 
         if self.entropy >= 100:
@@ -830,7 +976,7 @@ class PasswordAnalyzer:
             entropy_score = 0
 
         # ==================================================
-        # PATTERN RESISTANCE
+        # PATTERN SCORE
         # ==================================================
 
         pattern_score = 15
@@ -890,7 +1036,7 @@ class PasswordAnalyzer:
         )
 
         # ==================================================
-        # PREDICTABILITY
+        # PREDICTABILITY SCORE
         # ==================================================
 
         predictability_score = 10
@@ -921,7 +1067,7 @@ class PasswordAnalyzer:
         )
 
         # ==================================================
-        # ENTROPY SECURITY FLOOR
+        # ENTROPY HARD LIMITS
         # ==================================================
 
         if self.entropy < 20:
@@ -938,11 +1084,18 @@ class PasswordAnalyzer:
                 20
             )
 
-        elif self.entropy < 40:
+        elif self.entropy < 50:
 
             self.score = min(
                 raw_score,
-                35
+                39
+            )
+
+        elif self.entropy < 60:
+
+            self.score = min(
+                raw_score,
+                59
             )
 
         else:
@@ -950,7 +1103,7 @@ class PasswordAnalyzer:
             self.score = raw_score
 
         # ==================================================
-        # COMMON PASSWORD FLOOR
+        # COMMON PASSWORD
         # ==================================================
 
         if not self.checks.get(
@@ -960,11 +1113,11 @@ class PasswordAnalyzer:
 
             self.score = min(
                 self.score,
-                25
+                39
             )
 
         # ==================================================
-        # VERY SHORT PASSWORD FLOOR
+        # VERY SHORT PASSWORD
         # ==================================================
 
         if len(self.password) < 8:
@@ -975,7 +1128,77 @@ class PasswordAnalyzer:
             )
 
         # ==================================================
-        # NUMERIC-ONLY PASSWORD FLOOR
+        # 8-10 CHARACTER LIMIT
+        # ==================================================
+
+        elif len(self.password) <= 10:
+
+            self.score = min(
+                self.score,
+                59
+            )
+
+        # ==================================================
+        # 11-13 CHARACTER LIMIT
+        # ==================================================
+
+        elif len(self.password) <= 13:
+
+            self.score = min(
+                self.score,
+                79
+            )
+
+        # ==================================================
+        # PATTERN PENALTY LIMIT
+        # ==================================================
+
+        serious_pattern = (
+
+            not self.checks.get(
+                "patterns",
+                True
+            )
+
+            or
+
+            not self.checks.get(
+                "keyboard",
+                True
+            )
+
+            or
+
+            not self.checks.get(
+                "sequences",
+                True
+            )
+
+            or
+
+            not self.checks.get(
+                "leetspeak",
+                True
+            )
+
+            or
+
+            not self.checks.get(
+                "year",
+                True
+            )
+
+        )
+
+        if serious_pattern:
+
+            self.score = min(
+                self.score,
+                69
+            )
+
+        # ==================================================
+        # NUMERIC ONLY
         # ==================================================
 
         if self.password.isdigit():
@@ -986,7 +1209,7 @@ class PasswordAnalyzer:
             )
 
         # ==================================================
-        # FINAL LIMIT
+        # FINAL SCORE
         # ==================================================
 
         self.score = max(
@@ -998,34 +1221,6 @@ class PasswordAnalyzer:
                 )
             )
         )
-
-    # ======================================================
-    # CRACK RESISTANCE
-    # ======================================================
-
-    def get_crack_resistance(self):
-
-        if self.entropy < 30:
-
-            return "Very low"
-
-        if self.entropy < 50:
-
-            return "Low"
-
-        if self.entropy < 70:
-
-            return "Moderate"
-
-        if self.entropy < 90:
-
-            return "High"
-
-        if self.entropy < 110:
-
-            return "Very high"
-
-        return "Extremely high"
 
     # ======================================================
     # RATING
@@ -1057,6 +1252,38 @@ class PasswordAnalyzer:
 
     def get_result(self):
 
+        crack_time_strings = {
+
+            "online":
+                self.format_crack_time(
+                    self.crack_times[
+                        "online"
+                    ]
+                ),
+
+            "slow_offline":
+                self.format_crack_time(
+                    self.crack_times[
+                        "slow_offline"
+                    ]
+                ),
+
+            "fast_offline":
+                self.format_crack_time(
+                    self.crack_times[
+                        "fast_offline"
+                    ]
+                ),
+
+            "massive_gpu":
+                self.format_crack_time(
+                    self.crack_times[
+                        "massive_gpu"
+                    ]
+                )
+
+        }
+
         return {
 
             "score":
@@ -1076,6 +1303,9 @@ class PasswordAnalyzer:
 
             "crack_resistance":
                 self.get_crack_resistance(),
+
+            "crack_times":
+                crack_time_strings,
 
             "checks":
                 self.checks,

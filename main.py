@@ -14,8 +14,6 @@ from analyzer import PasswordAnalyzer
 
 RESET = "\033[0m"
 
-BOLD = "\033[1m"
-
 GREEN = "\033[92m"
 
 RED = "\033[91m"
@@ -24,118 +22,85 @@ YELLOW = "\033[93m"
 
 CYAN = "\033[96m"
 
+BLUE = "\033[94m"
+
+WHITE = "\033[97m"
+
 
 # ==========================================================
 # HEADER
 # ==========================================================
 
-def show_header():
+def print_header():
 
     print()
 
     print(
-        f"{CYAN}{BOLD}"
         "╔══════════════════════════════════════╗"
-        f"{RESET}"
     )
 
     print(
-        f"{CYAN}{BOLD}"
         "║          🔐 PASSGUARD               ║"
-        f"{RESET}"
     )
 
     print(
-        f"{CYAN}{BOLD}"
         "║     Password Security Analyzer      ║"
-        f"{RESET}"
     )
 
     print(
-        f"{CYAN}{BOLD}"
         "╚══════════════════════════════════════╝"
-        f"{RESET}"
     )
 
     print()
 
 
 # ==========================================================
-# SCORE BAR
+# BOOLEAN DISPLAY
 # ==========================================================
 
-def create_score_bar(score):
-
-    total_blocks = 20
-
-
-    filled_blocks = round(
-        score
-        /
-        100
-        *
-        total_blocks
-    )
-
-
-    empty_blocks = (
-        total_blocks
-        -
-        filled_blocks
-    )
-
-
-    if score >= 80:
-
-        color = GREEN
-
-    elif score >= 60:
-
-        color = YELLOW
-
-    else:
-
-        color = RED
-
-
-    return (
-
-        f"{color}"
-
-        +
-
-        "█" * filled_blocks
-
-        +
-
-        "░" * empty_blocks
-
-        +
-
-        f"{RESET}"
-
-    )
-
-
-# ==========================================================
-# CHECK STATUS
-# ==========================================================
-
-def check_status(value):
+def display_boolean(value):
 
     if value:
 
         return (
-            f"{GREEN}"
-            "✓"
-            f"{RESET}"
+            f"{GREEN}✓{RESET}"
         )
 
+    return (
+        f"{RED}✗{RESET}"
+    )
+
+
+# ==========================================================
+# STRENGTH BAR
+# ==========================================================
+
+def strength_bar(score):
+
+    total_blocks = 20
+
+    filled = round(
+        score / 100 * total_blocks
+    )
+
+    filled = max(
+        0,
+        min(
+            total_blocks,
+            filled
+        )
+    )
+
+    empty = (
+        total_blocks
+        -
+        filled
+    )
 
     return (
-        f"{RED}"
-        "✗"
-        f"{RESET}"
+        "█" * filled
+        +
+        "░" * empty
     )
 
 
@@ -143,196 +108,146 @@ def check_status(value):
 # RATING COLOR
 # ==========================================================
 
-def get_rating_color(score):
+def rating_color(rating):
 
-    if score >= 80:
+    if rating == "VERY WEAK":
 
-        return GREEN
+        return RED
 
+    if rating == "WEAK":
 
-    if score >= 60:
+        return RED
+
+    if rating == "MEDIUM":
 
         return YELLOW
 
+    if rating == "STRONG":
 
-    return RED
+        return GREEN
+
+    return GREEN
 
 
 # ==========================================================
-# FORMAT SEARCH SPACE
+# SEARCH SPACE FORMAT
 # ==========================================================
 
 def format_search_space(value):
 
-    if value == 0:
+    if value <= 0:
 
         return "0"
 
-
-    return f"{value:.2e}"
-
-
-# ==========================================================
-# SECURITY CHECKS
-# ==========================================================
-
-def show_security_checks(
-    result,
-    password_length
-):
-
-    checks = result[
-        "checks"
-    ]
-
-
-    print(
-        f"{BOLD}"
-        "Security Analysis"
-        f"{RESET}"
+    return (
+        f"{value:.2e}"
     )
 
+
+# ==========================================================
+# SECURITY ANALYSIS
+# ==========================================================
+
+def print_analysis(result):
+
+    checks = result["checks"]
+
+    print()
+
+    print(
+        "Security Analysis"
+    )
 
     print(
         "──────────────────────────────────────"
     )
 
-
     print(
         f"Length              "
-        f"{password_length} characters"
+        f"{len(password)} characters"
     )
-
 
     print(
         f"Uppercase           "
-        f"{check_status(checks['uppercase'])}"
+        f"{display_boolean(checks.get('uppercase', False))}"
     )
-
 
     print(
         f"Lowercase           "
-        f"{check_status(checks['lowercase'])}"
+        f"{display_boolean(checks.get('lowercase', False))}"
     )
-
 
     print(
         f"Numbers             "
-        f"{check_status(checks['numbers'])}"
+        f"{display_boolean(checks.get('numbers', False))}"
     )
-
 
     print(
         f"Symbols             "
-        f"{check_status(checks['symbols'])}"
+        f"{display_boolean(checks.get('symbols', False))}"
     )
-
 
     print(
         f"Character diversity "
-        f"{check_status(checks['diversity'])}"
+        f"{display_boolean(checks.get('diversity', False))}"
     )
-
 
     print(
         f"Common password     "
-        f"{check_status(checks['common'])}"
+        f"{display_boolean(not checks.get('common', True))}"
     )
-
 
     print(
         f"Patterns            "
-        f"{check_status(checks['patterns'])}"
+        f"{display_boolean(not checks.get('patterns', True))}"
     )
-
 
     print(
         f"Repetition          "
-        f"{check_status(checks['repetition'])}"
+        f"{display_boolean(not checks.get('repetition', True))}"
     )
-
 
     print(
         f"Sequences           "
-        f"{check_status(checks['sequences'])}"
+        f"{display_boolean(not checks.get('sequences', True))}"
     )
-
 
     print(
         f"Predictability      "
-        f"{check_status(checks['predictability'])}"
+        f"{display_boolean(not checks.get('predictability', True))}"
     )
 
-
-    # ======================================================
-    # OPTIONAL CHECKS
-    # ======================================================
-
-    if "keyboard" in checks:
-
-        print(
-            f"Keyboard pattern    "
-            f"{check_status(checks['keyboard'])}"
-        )
-
-
-    if "leetspeak" in checks:
-
-        print(
-            f"Leetspeak           "
-            f"{check_status(checks['leetspeak'])}"
-        )
-
-
-    if "year" in checks:
-
-        print(
-            f"Year pattern        "
-            f"{check_status(checks['year'])}"
-        )
-
-
-# ==========================================================
-# RESULT
-# ==========================================================
-
-def show_result(result):
-
-    score = result[
-        "score"
-    ]
-
-
-    rating = result[
-        "rating"
-    ]
-
-
-    rating_color = get_rating_color(
-        score
+    print(
+        f"Keyboard pattern    "
+        f"{display_boolean(not checks.get('keyboard', True))}"
     )
 
+    print(
+        f"Leetspeak           "
+        f"{display_boolean(not checks.get('leetspeak', True))}"
+    )
+
+    print(
+        f"Year pattern        "
+        f"{display_boolean(not checks.get('year', True))}"
+    )
 
     print()
-
 
     print(
         f"Character pool      "
         f"{result['character_pool']}"
     )
 
-
     print(
         f"Entropy             "
         f"{result['entropy']} bits"
     )
 
-
     print(
         f"Search space        "
         f"{format_search_space(result['search_space'])}"
     )
-
 
     print(
         f"Crack resistance    "
@@ -340,24 +255,88 @@ def show_result(result):
     )
 
 
+# ==========================================================
+# CRACK TIME
+# ==========================================================
+
+def print_crack_times(result):
+
+    crack_times = result[
+        "crack_times"
+    ]
+
     print()
 
+    print(
+        "Crack Time Estimate"
+    )
 
     print(
-        f"Strength            "
-        f"{create_score_bar(score)}"
-        f" {score}/100"
+        "──────────────────────────────────────"
+    )
+
+    print(
+        "Estimated average time to exhaust "
+        "half of the search space."
+    )
+
+    print()
+
+    print(
+        f"Online attack       "
+        f"{crack_times['online']}"
+    )
+
+    print(
+        f"Slow offline attack "
+        f"{crack_times['slow_offline']}"
+    )
+
+    print(
+        f"Fast offline attack "
+        f"{crack_times['fast_offline']}"
+    )
+
+    print(
+        f"Massive GPU attack  "
+        f"{crack_times['massive_gpu']}"
     )
 
 
+# ==========================================================
+# STRENGTH
+# ==========================================================
+
+def print_strength(result):
+
+    score = result[
+        "score"
+    ]
+
+    rating = result[
+        "rating"
+    ]
+
+    color = rating_color(
+        rating
+    )
+
     print()
 
+    print(
+        "Strength"
+    )
+
+    print(
+        f"{strength_bar(score)} "
+        f"{score}/100"
+    )
+
+    print()
 
     print(
         f"Rating: "
-        f"{rating_color}{BOLD}"
-        f"{rating}"
-        f"{RESET}"
+        f"{color}{rating}{RESET}"
     )
 
 
@@ -365,38 +344,30 @@ def show_result(result):
 # DETECTED PATTERNS
 # ==========================================================
 
-def show_detected_patterns(result):
+def print_detected_patterns(result):
 
     patterns = result[
         "detected_patterns"
     ]
 
-
     if not patterns:
 
         return
 
-
     print()
 
-
     print(
-        f"{BOLD}"
         "Detected patterns"
-        f"{RESET}"
     )
-
 
     print(
         "──────────────────────────────────────"
     )
 
-
     for pattern in patterns:
 
         print(
-            f"{YELLOW}⚠{RESET} "
-            f"{pattern}"
+            f"⚠ {pattern}"
         )
 
 
@@ -404,60 +375,63 @@ def show_detected_patterns(result):
 # RECOMMENDATIONS
 # ==========================================================
 
-def show_recommendations(result):
+def print_recommendations(result):
 
     issues = result[
         "issues"
     ]
-
 
     if not issues:
 
         print()
 
         print(
-            f"{GREEN}{BOLD}"
-            "✓ No obvious weaknesses detected."
-            f"{RESET}"
+            f"{GREEN}✓ No obvious weaknesses detected.{RESET}"
         )
 
         return
 
-
     print()
 
-
     print(
-        f"{BOLD}"
         "Recommendations"
-        f"{RESET}"
     )
-
 
     print(
         "──────────────────────────────────────"
     )
 
-
-    # Prevent duplicate recommendations
-
-    shown = set()
-
+    unique_issues = []
 
     for issue in issues:
 
-        if issue in shown:
+        if issue not in unique_issues:
 
-            continue
+            unique_issues.append(
+                issue
+            )
 
-
-        shown.add(issue)
-
+    for issue in unique_issues:
 
         print(
-            f"{YELLOW}→{RESET} "
-            f"{issue}"
+            f"→ {issue}"
         )
+
+
+# ==========================================================
+# PRIVACY
+# ==========================================================
+
+def print_privacy():
+
+    print()
+
+    print(
+        "Privacy: Your password is analyzed "
+        "locally and is never stored or sent."
+    )
+
+    print()
 
 
 # ==========================================================
@@ -466,12 +440,9 @@ def show_recommendations(result):
 
 def main():
 
-    show_header()
+    global password
 
-
-    # ======================================================
-    # INPUT
-    # ======================================================
+    print_header()
 
     try:
 
@@ -479,103 +450,59 @@ def main():
             "Enter password: "
         )
 
-
     except KeyboardInterrupt:
 
         print()
 
         print(
-            f"{YELLOW}"
-            "Operation cancelled."
-            f"{RESET}"
+            "Analysis cancelled."
         )
 
         return
 
+    except Exception:
 
-    except EOFError:
-
-        print()
-
-        print(
-            f"{RED}"
-            "Unable to read password input."
-            f"{RESET}"
+        password = input(
+            "Enter password: "
         )
-
-        return
-
-
-    # ======================================================
-    # EMPTY PASSWORD
-    # ======================================================
 
     if not password:
 
         print()
 
         print(
-            f"{RED}"
             "Password cannot be empty."
-            f"{RESET}"
         )
 
         return
-
-
-    # ======================================================
-    # ANALYZE
-    # ======================================================
 
     analyzer = PasswordAnalyzer(
         password
     )
 
-
     result = analyzer.analyze()
 
-
-    # ======================================================
-    # DISPLAY
-    # ======================================================
-
-    show_security_checks(
-        result,
-        len(password)
-    )
-
-
-    show_result(
+    print_analysis(
         result
     )
 
-
-    show_detected_patterns(
+    print_crack_times(
         result
     )
 
-
-    show_recommendations(
+    print_strength(
         result
     )
 
-
-    # ======================================================
-    # PRIVACY
-    # ======================================================
-
-    print()
-
-
-    print(
-        f"{CYAN}"
-        "Privacy: Your password is analyzed "
-        "locally and is never stored or sent."
-        f"{RESET}"
+    print_detected_patterns(
+        result
     )
 
+    print_recommendations(
+        result
+    )
 
-    print()
+    print_privacy()
 
 
 # ==========================================================
