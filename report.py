@@ -1,227 +1,580 @@
 # ==========================================================
 # PASSGUARD
-# SECURITY REPORT
+# SECURITY REPORT GENERATOR
 # ==========================================================
 
-from analyzer import PasswordAnalyzer
+import json
+import os
+from datetime import datetime
 
 
-class SecurityReport:
+# ==========================================================
+# REPORT DIRECTORY
+# ==========================================================
 
-    # ======================================================
-    # INIT
-    # ======================================================
+REPORT_DIRECTORY = "reports"
 
-    def __init__(self, password):
 
-        self.password = password
+# ==========================================================
+# CREATE REPORT DIRECTORY
+# ==========================================================
 
-        analyzer = PasswordAnalyzer(password)
+def ensure_report_directory():
 
-        self.result = analyzer.analyze()
+    os.makedirs(
+        REPORT_DIRECTORY,
+        exist_ok=True
+    )
 
-    # ======================================================
-    # CHECK MARK
-    # ======================================================
 
-    def check_mark(self, value):
+# ==========================================================
+# REPORT TIMESTAMP
+# ==========================================================
 
-        return "✓" if value else "✗"
+def generate_timestamp():
 
-    # ======================================================
-    # FORMAT SEARCH SPACE
-    # ======================================================
+    return datetime.now().strftime(
+        "%Y%m%d_%H%M%S_%f"
+    )
 
-    def format_search_space(self):
 
-        value = self.result["search_space"]
+# ==========================================================
+# BUILD REPORT
+# ==========================================================
 
-        if value == 0:
+def build_report(password, result):
 
-            return "0"
+    checks = result.get(
+        "checks",
+        {}
+    )
 
-        return f"{value:.2e}"
+    report = {
 
-    # ======================================================
-    # SECURITY CHECKS
-    # ======================================================
+        "application": {
 
-    def print_checks(self):
+            "name":
+                "PassGuard",
 
-        checks = self.result["checks"]
+            "version":
+                "1.0.0",
 
-        print(
-            "Security Checks"
-        )
+            "type":
+                "Password Security Analyzer"
+        },
 
-        print(
-            "─" * 38
-        )
+        "generated_at":
+            datetime.now().isoformat(
+                timespec="seconds"
+            ),
 
-        labels = {
+        "privacy": {
+
+            "processed_locally":
+                True,
+
+            "password_stored":
+                False,
+
+            "password_sent":
+                False,
+
+            "password_included_in_report":
+                False
+        },
+
+        "summary": {
+
+            "score":
+                result.get(
+                    "score",
+                    0
+                ),
+
+            "rating":
+                result.get(
+                    "rating",
+                    "UNKNOWN"
+                ),
+
+            "crack_resistance":
+                result.get(
+                    "crack_resistance",
+                    "Unknown"
+                ),
+
+            "entropy":
+                result.get(
+                    "entropy",
+                    0
+                ),
+
+            "character_pool":
+                result.get(
+                    "character_pool",
+                    0
+                ),
+
+            "search_space":
+                result.get(
+                    "search_space",
+                    0
+                )
+        },
+
+        "password": {
 
             "length":
-                "Minimum length",
+                len(password),
 
             "uppercase":
-                "Uppercase",
+                checks.get(
+                    "uppercase",
+                    False
+                ),
 
             "lowercase":
-                "Lowercase",
+                checks.get(
+                    "lowercase",
+                    False
+                ),
 
             "numbers":
-                "Numbers",
+                checks.get(
+                    "numbers",
+                    False
+                ),
 
             "symbols":
-                "Symbols",
+                checks.get(
+                    "symbols",
+                    False
+                ),
 
-            "diversity":
-                "Character diversity",
+            "character_diversity":
+                checks.get(
+                    "diversity",
+                    False
+                )
+        },
 
-            "common":
-                "Common password",
+        "security_checks":
+            checks,
 
-            "patterns":
-                "Common patterns",
+        "crack_times":
+            result.get(
+                "crack_times",
+                {}
+            ),
 
-            "repetition":
-                "Repetition",
+        "detected_patterns":
+            result.get(
+                "detected_patterns",
+                []
+            ),
 
-            "sequences":
-                "Sequential patterns",
-
-            "predictability":
-                "Predictability",
-
-            "keyboard":
-                "Keyboard patterns",
-
-            "leetspeak":
-                "Leetspeak",
-
-            "year":
-                "Year pattern",
-
-        }
-
-        for key, label in labels.items():
-
-            value = checks.get(
-                key,
-                True
+        "recommendations":
+            result.get(
+                "issues",
+                []
             )
+    }
 
-            print(
-                f"{self.check_mark(value)} "
-                f"{label}"
-            )
+    return report
 
-        print()
 
-    # ======================================================
+# ==========================================================
+# SAVE JSON REPORT
+# ==========================================================
+
+def save_json_report(password, result):
+
+    ensure_report_directory()
+
+    report = build_report(
+        password,
+        result
+    )
+
+    timestamp = generate_timestamp()
+
+    filename = (
+        f"passguard_report_{timestamp}.json"
+    )
+
+    filepath = os.path.join(
+        REPORT_DIRECTORY,
+        filename
+    )
+
+    with open(
+        filepath,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            report,
+            file,
+            indent=4,
+            ensure_ascii=False
+        )
+
+    return filepath
+
+
+# ==========================================================
+# SAVE TEXT REPORT
+# ==========================================================
+
+def save_text_report(password, result):
+
+    ensure_report_directory()
+
+    score = result.get(
+        "score",
+        0
+    )
+
+    rating = result.get(
+        "rating",
+        "UNKNOWN"
+    )
+
+    timestamp = generate_timestamp()
+
+    filename = (
+        f"passguard_report_{timestamp}.txt"
+    )
+
+    filepath = os.path.join(
+        REPORT_DIRECTORY,
+        filename
+    )
+
+    lines = []
+
+    lines.append(
+        "PASSGUARD SECURITY REPORT"
+    )
+
+    lines.append(
+        "=" * 50
+    )
+
+    lines.append("")
+
+    # ------------------------------------------------------
+    # APPLICATION
+    # ------------------------------------------------------
+
+    lines.append(
+        "Application"
+    )
+
+    lines.append(
+        "-" * 50
+    )
+
+    lines.append(
+        "Name: PassGuard"
+    )
+
+    lines.append(
+        "Version: 1.0.0"
+    )
+
+    lines.append(
+        "Type: Password Security Analyzer"
+    )
+
+    lines.append("")
+
+    # ------------------------------------------------------
+    # PRIVACY
+    # ------------------------------------------------------
+
+    lines.append(
+        "Privacy"
+    )
+
+    lines.append(
+        "-" * 50
+    )
+
+    lines.append(
+        "Password processed locally: YES"
+    )
+
+    lines.append(
+        "Password stored: NO"
+    )
+
+    lines.append(
+        "Password sent anywhere: NO"
+    )
+
+    lines.append(
+        "Password included in report: NO"
+    )
+
+    lines.append("")
+
+    # ------------------------------------------------------
+    # SUMMARY
+    # ------------------------------------------------------
+
+    lines.append(
+        "Security Summary"
+    )
+
+    lines.append(
+        "-" * 50
+    )
+
+    lines.append(
+        f"Score: {score}/100"
+    )
+
+    lines.append(
+        f"Rating: {rating}"
+    )
+
+    lines.append(
+        f"Entropy: "
+        f"{result.get('entropy', 0)} bits"
+    )
+
+    lines.append(
+        f"Character pool: "
+        f"{result.get('character_pool', 0)}"
+    )
+
+    search_space = result.get(
+        "search_space",
+        0
+    )
+
+    lines.append(
+        f"Search space: "
+        f"{search_space:.2e}"
+    )
+
+    lines.append(
+        f"Crack resistance: "
+        f"{result.get('crack_resistance', 'Unknown')}"
+    )
+
+    lines.append("")
+
+    # ------------------------------------------------------
+    # PASSWORD CHARACTER INFORMATION
+    # ------------------------------------------------------
+
+    lines.append(
+        "Password Characteristics"
+    )
+
+    lines.append(
+        "-" * 50
+    )
+
+    checks = result.get(
+        "checks",
+        {}
+    )
+
+    lines.append(
+        f"Length: "
+        f"{len(password)}"
+    )
+
+    lines.append(
+        f"Uppercase: "
+        f"{'YES' if checks.get('uppercase') else 'NO'}"
+    )
+
+    lines.append(
+        f"Lowercase: "
+        f"{'YES' if checks.get('lowercase') else 'NO'}"
+    )
+
+    lines.append(
+        f"Numbers: "
+        f"{'YES' if checks.get('numbers') else 'NO'}"
+    )
+
+    lines.append(
+        f"Symbols: "
+        f"{'YES' if checks.get('symbols') else 'NO'}"
+    )
+
+    lines.append(
+        f"Character diversity: "
+        f"{'YES' if checks.get('diversity') else 'NO'}"
+    )
+
+    lines.append("")
+
+    # ------------------------------------------------------
+    # SECURITY CHECKS
+    # ------------------------------------------------------
+
+    lines.append(
+        "Security Checks"
+    )
+
+    lines.append(
+        "-" * 50
+    )
+
+    check_names = {
+
+        "uppercase":
+            "Uppercase",
+
+        "lowercase":
+            "Lowercase",
+
+        "numbers":
+            "Numbers",
+
+        "symbols":
+            "Symbols",
+
+        "diversity":
+            "Character diversity",
+
+        "common":
+            "Common password",
+
+        "patterns":
+            "Patterns",
+
+        "repetition":
+            "Repetition",
+
+        "sequences":
+            "Sequences",
+
+        "predictability":
+            "Predictability",
+
+        "keyboard":
+            "Keyboard pattern",
+
+        "leetspeak":
+            "Leetspeak",
+
+        "year":
+            "Year pattern",
+    }
+
+    for key, name in check_names.items():
+
+        value = checks.get(
+            key,
+            False
+        )
+
+        status = (
+            "PASS"
+            if value
+            else
+            "FAIL"
+        )
+
+        lines.append(
+            f"{name}: {status}"
+        )
+
+    lines.append("")
+
+    # ------------------------------------------------------
     # CRACK TIMES
-    # ======================================================
+    # ------------------------------------------------------
 
-    def print_crack_times(self):
+    lines.append(
+        "Crack Time Estimate"
+    )
 
-        times = self.result[
-            "crack_times"
-        ]
+    lines.append(
+        "-" * 50
+    )
 
-        print(
-            "Attack Resistance"
+    crack_names = {
+
+        "online":
+            "Online attack",
+
+        "slow_offline":
+            "Slow offline attack",
+
+        "fast_offline":
+            "Fast offline attack",
+
+        "massive_gpu":
+            "Massive GPU attack",
+    }
+
+    crack_times = result.get(
+        "crack_times",
+        {}
+    )
+
+    for key, name in crack_names.items():
+
+        lines.append(
+            f"{name}: "
+            f"{crack_times.get(key, 'Unknown')}"
         )
 
-        print(
-            "─" * 38
-        )
-
-        print(
-            f"{'Online attack':22}"
-            f"{times['online']}"
-        )
-
-        print(
-            f"{'Slow offline attack':22}"
-            f"{times['slow_offline']}"
-        )
-
-        print(
-            f"{'Fast offline attack':22}"
-            f"{times['fast_offline']}"
-        )
-
-        print(
-            f"{'Massive GPU attack':22}"
-            f"{times['massive_gpu']}"
-        )
-
-        print()
-
-    # ======================================================
+    # ------------------------------------------------------
     # DETECTED PATTERNS
-    # ======================================================
+    # ------------------------------------------------------
 
-    def print_patterns(self):
+    detected = result.get(
+        "detected_patterns",
+        []
+    )
 
-        patterns = self.result[
-            "detected_patterns"
-        ]
+    if detected:
 
-        if not patterns:
+        lines.append("")
 
-            return
-
-        print(
+        lines.append(
             "Detected Patterns"
         )
 
-        print(
-            "─" * 38
+        lines.append(
+            "-" * 50
         )
 
-        for pattern in patterns:
+        for pattern in detected:
 
-            print(
-                f"⚠ {pattern}"
+            lines.append(
+                f"- {pattern}"
             )
 
-        print()
-
-    # ======================================================
+    # ------------------------------------------------------
     # RECOMMENDATIONS
-    # ======================================================
+    # ------------------------------------------------------
 
-    def print_recommendations(self):
+    issues = result.get(
+        "issues",
+        []
+    )
 
-        issues = self.result[
-            "issues"
-        ]
+    if issues:
 
-        if not issues:
+        lines.append("")
 
-            print(
-                "Recommendations"
-            )
-
-            print(
-                "─" * 38
-            )
-
-            print(
-                "✓ No improvements required."
-            )
-
-            print()
-
-            return
-
-        print(
+        lines.append(
             "Recommendations"
         )
 
-        print(
-            "─" * 38
+        lines.append(
+            "-" * 50
         )
 
         unique_issues = []
@@ -236,191 +589,40 @@ class SecurityReport:
 
         for issue in unique_issues:
 
-            print(
-                f"→ {issue}"
+            lines.append(
+                f"- {issue}"
             )
 
-        print()
+    # ------------------------------------------------------
+    # FOOTER
+    # ------------------------------------------------------
 
-    # ======================================================
-    # VERDICT
-    # ======================================================
+    lines.append("")
 
-    def print_verdict(self):
+    lines.append(
+        "=" * 50
+    )
 
-        score = self.result[
-            "score"
-        ]
+    lines.append(
+        "Generated by PassGuard"
+    )
 
-        rating = self.result[
-            "rating"
-        ]
+    lines.append(
+        "Password Security Suite"
+    )
 
-        print(
-            "Security Verdict"
+    lines.append(
+        "Password itself is never included in this report."
+    )
+
+    with open(
+        filepath,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        file.write(
+            "\n".join(lines)
         )
 
-        print(
-            "─" * 38
-        )
-
-        if score >= 80:
-
-            print(
-                "✓ Password has strong security"
-            )
-
-            print(
-                "✓ No major weaknesses detected."
-            )
-
-        elif score >= 60:
-
-            print(
-                "⚠ Password has reasonable security"
-            )
-
-            print(
-                "⚠ Consider increasing its length."
-            )
-
-        elif score >= 40:
-
-            print(
-                "⚠ Password security is moderate."
-            )
-
-            print(
-                "⚠ Several improvements are recommended."
-            )
-
-        else:
-
-            print(
-                "✗ Password is vulnerable."
-            )
-
-            print(
-                "✗ Significant improvements are required."
-            )
-
-        print()
-
-        print(
-            f"Final rating: {rating}"
-        )
-
-        print()
-
-    # ======================================================
-    # PRINT REPORT
-    # ======================================================
-
-    def print_report(self):
-
-        result = self.result
-
-        print()
-
-        print(
-            "╔══════════════════════════════════════╗"
-        )
-
-        print(
-            "║          🔐 PASSGUARD               ║"
-        )
-
-        print(
-            "║        SECURITY REPORT              ║"
-        )
-
-        print(
-            "╚══════════════════════════════════════╝"
-        )
-
-        print()
-
-        print(
-            "Password Security Report"
-        )
-
-        print(
-            "═" * 38
-        )
-
-        print()
-
-        print(
-            f"{'Overall Security':22}"
-            f"{result['score']}/100"
-        )
-
-        print(
-            f"{'Rating':22}"
-            f"{result['rating']}"
-        )
-
-        print()
-
-        print(
-            "Password Metrics"
-        )
-
-        print(
-            "─" * 38
-        )
-
-        print(
-            f"{'Length':22}"
-            f"{len(self.password)} characters"
-        )
-
-        print(
-            f"{'Character pool':22}"
-            f"{result['character_pool']}"
-        )
-
-        print(
-            f"{'Entropy':22}"
-            f"{result['entropy']} bits"
-        )
-
-        print(
-            f"{'Search space':22}"
-            f"{self.format_search_space()}"
-        )
-
-        print(
-            f"{'Crack resistance':22}"
-            f"{result['crack_resistance']}"
-        )
-
-        print()
-
-        self.print_crack_times()
-
-        self.print_checks()
-
-        self.print_patterns()
-
-        self.print_recommendations()
-
-        self.print_verdict()
-
-        print(
-            "Privacy"
-        )
-
-        print(
-            "─" * 38
-        )
-
-        print(
-            "Your password is analyzed locally."
-        )
-
-        print(
-            "It is never stored or sent anywhere."
-        )
-
-        print()
+    return filepath

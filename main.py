@@ -8,6 +8,21 @@ import getpass
 from analyzer import PasswordAnalyzer
 from generator import PasswordGenerator
 
+from report import (
+    save_json_report,
+    save_text_report
+)
+
+from history import (
+    add_history,
+    load_history,
+    clear_history,
+    delete_last_entry,
+    get_history_count,
+    format_entry_date,
+    history_privacy_note
+)
+
 
 # ==========================================================
 # CONSTANTS
@@ -24,10 +39,21 @@ def show_header():
 
     print()
 
-    print("╔══════════════════════════════════════╗")
-    print("║          🔐 PASSGUARD               ║")
-    print("║     Password Security Suite         ║")
-    print("╚══════════════════════════════════════╝")
+    print(
+        "╔══════════════════════════════════════╗"
+    )
+
+    print(
+        "║          🔐 PASSGUARD               ║"
+    )
+
+    print(
+        "║     Password Security Suite         ║"
+    )
+
+    print(
+        "╚══════════════════════════════════════╝"
+    )
 
     print()
 
@@ -40,22 +66,46 @@ def ask_yes_no(question, default=True):
 
     while True:
 
-        default_text = "Y/n" if default else "y/N"
+        default_text = (
+            "Y/n"
+            if default
+            else
+            "y/N"
+        )
 
-        answer = input(
-            f"{question} [{default_text}]: "
-        ).strip().lower()
+        try:
 
-        if not answer:
+            answer = input(
+                f"{question} [{default_text}]: "
+            ).strip().lower()
+
+        except KeyboardInterrupt:
+
+            print()
+
             return default
 
-        if answer in ("y", "yes"):
+        if not answer:
+
+            return default
+
+        if answer in (
+            "y",
+            "yes"
+        ):
+
             return True
 
-        if answer in ("n", "no"):
+        if answer in (
+            "n",
+            "no"
+        ):
+
             return False
 
-        print("Please enter Y or N.")
+        print(
+            "Please enter Y or N."
+        )
 
 
 # ==========================================================
@@ -65,6 +115,7 @@ def ask_yes_no(question, default=True):
 def format_search_space(value):
 
     if not value:
+
         return "0"
 
     return f"{value:.2e}"
@@ -78,17 +129,24 @@ def strength_bar(score):
 
     total = 20
 
-    filled = round(score / 5)
+    filled = round(
+        score / 5
+    )
 
     filled = max(
         0,
-        min(total, filled)
+        min(
+            total,
+            filled
+        )
     )
 
     return (
         "█" * filled
         +
-        "░" * (total - filled)
+        "░" * (
+            total - filled
+        )
     )
 
 
@@ -98,18 +156,24 @@ def strength_bar(score):
 
 def get_rating_icon(rating):
 
-    rating = rating.upper()
+    rating = str(
+        rating
+    ).upper()
 
     if rating == "VERY STRONG":
+
         return "🟢"
 
     if rating == "STRONG":
+
         return "🟢"
 
     if rating == "MEDIUM":
+
         return "🟡"
 
     if rating == "WEAK":
+
         return "🟠"
 
     return "🔴"
@@ -128,21 +192,42 @@ def show_check(label, value):
 
 
 # ==========================================================
+# UNIQUE ITEMS
+# ==========================================================
+
+def unique_items(items):
+
+    result = []
+
+    for item in items:
+
+        if item not in result:
+
+            result.append(
+                item
+            )
+
+    return result
+
+
+# ==========================================================
 # SHOW ANALYSIS
 # ==========================================================
 
 def show_analysis(result, password):
 
-    checks = result.get("checks", {})
+    checks = result.get(
+        "checks",
+        {}
+    )
 
     print()
 
-    print("Security Analysis")
-    print(LINE)
+    print(
+        "Security Analysis"
+    )
 
-    # ======================================================
-    # BASIC CHECKS
-    # ======================================================
+    print(LINE)
 
     print(
         f"{'Length':<20}"
@@ -151,71 +236,110 @@ def show_analysis(result, password):
 
     show_check(
         "Uppercase",
-        checks.get("uppercase", False)
+        checks.get(
+            "uppercase",
+            False
+        )
     )
 
     show_check(
         "Lowercase",
-        checks.get("lowercase", False)
+        checks.get(
+            "lowercase",
+            False
+        )
     )
 
     show_check(
         "Numbers",
-        checks.get("numbers", False)
+        checks.get(
+            "numbers",
+            False
+        )
     )
 
     show_check(
         "Symbols",
-        checks.get("symbols", False)
+        checks.get(
+            "symbols",
+            False
+        )
     )
 
     show_check(
         "Character diversity",
-        checks.get("diversity", False)
+        checks.get(
+            "diversity",
+            False
+        )
     )
 
     show_check(
         "Common password",
-        checks.get("common", True)
+        checks.get(
+            "common",
+            True
+        )
     )
 
     show_check(
         "Patterns",
-        checks.get("patterns", True)
+        checks.get(
+            "patterns",
+            True
+        )
     )
 
     show_check(
         "Repetition",
-        checks.get("repetition", True)
+        checks.get(
+            "repetition",
+            True
+        )
     )
 
     show_check(
         "Sequences",
-        checks.get("sequences", True)
+        checks.get(
+            "sequences",
+            True
+        )
     )
 
     show_check(
         "Predictability",
-        checks.get("predictability", True)
+        checks.get(
+            "predictability",
+            True
+        )
     )
 
     show_check(
         "Keyboard pattern",
-        checks.get("keyboard", True)
+        checks.get(
+            "keyboard",
+            True
+        )
     )
 
     show_check(
         "Leetspeak",
-        checks.get("leetspeak", True)
+        checks.get(
+            "leetspeak",
+            True
+        )
     )
 
     show_check(
         "Year pattern",
-        checks.get("year", True)
+        checks.get(
+            "year",
+            True
+        )
     )
 
     # ======================================================
-    # ENTROPY
+    # SECURITY METRICS
     # ======================================================
 
     print()
@@ -241,7 +365,7 @@ def show_analysis(result, password):
     )
 
     # ======================================================
-    # CRACK TIME
+    # CRACK TIMES
     # ======================================================
 
     crack_times = result.get(
@@ -253,7 +377,10 @@ def show_analysis(result, password):
 
         print()
 
-        print("Crack Time Estimate")
+        print(
+            "Crack Time Estimate"
+        )
+
         print(LINE)
 
         print(
@@ -287,20 +414,25 @@ def show_analysis(result, password):
     # STRENGTH
     # ======================================================
 
-    score = result.get("score", 0)
-
-    print()
-
-    print("Strength")
-
-    print(
-        f"{strength_bar(score)} "
-        f"{score}/100"
+    score = result.get(
+        "score",
+        0
     )
 
     rating = result.get(
         "rating",
         "UNKNOWN"
+    )
+
+    print()
+
+    print(
+        "Strength"
+    )
+
+    print(
+        f"{strength_bar(score)} "
+        f"{score}/100"
     )
 
     print()
@@ -315,29 +447,24 @@ def show_analysis(result, password):
     # DETECTED PATTERNS
     # ======================================================
 
-    detected = result.get(
-        "detected_patterns",
-        []
+    detected = unique_items(
+        result.get(
+            "detected_patterns",
+            []
+        )
     )
 
     if detected:
 
         print()
 
-        print("Detected patterns")
+        print(
+            "Detected patterns"
+        )
+
         print(LINE)
 
-        unique_patterns = []
-
         for pattern in detected:
-
-            if pattern not in unique_patterns:
-
-                unique_patterns.append(
-                    pattern
-                )
-
-        for pattern in unique_patterns:
 
             print(
                 f"⚠ {pattern}"
@@ -347,29 +474,24 @@ def show_analysis(result, password):
     # RECOMMENDATIONS
     # ======================================================
 
-    issues = result.get(
-        "issues",
-        []
+    issues = unique_items(
+        result.get(
+            "issues",
+            []
+        )
     )
 
-    unique_issues = []
-
-    for issue in issues:
-
-        if issue not in unique_issues:
-
-            unique_issues.append(
-                issue
-            )
-
-    if unique_issues:
+    if issues:
 
         print()
 
-        print("Recommendations")
+        print(
+            "Recommendations"
+        )
+
         print(LINE)
 
-        for issue in unique_issues:
+        for issue in issues:
 
             print(
                 f"→ {issue}"
@@ -405,7 +527,10 @@ def analyze_password():
 
     print()
 
-    print("Password Analysis")
+    print(
+        "Password Analysis"
+    )
+
     print(LINE)
 
     print(
@@ -427,8 +552,21 @@ def analyze_password():
     except KeyboardInterrupt:
 
         print()
+
+        print(
+            "Operation cancelled."
+        )
+
+        return
+
+    except EOFError:
+
         print()
-        print("Operation cancelled.")
+
+        print(
+            "Operation cancelled."
+        )
+
         return
 
     if not password:
@@ -447,6 +585,25 @@ def analyze_password():
 
     result = analyzer.analyze()
 
+    # ======================================================
+    # SAVE HISTORY
+    # ======================================================
+
+    try:
+
+        add_history(
+            result,
+            action="analysis"
+        )
+
+    except Exception as error:
+
+        print()
+
+        print(
+            f"Warning: Could not save history: {error}"
+        )
+
     show_analysis(
         result,
         password
@@ -461,18 +618,39 @@ def get_generator_settings():
 
     print()
 
-    print("Password Generator")
-    print(LINE)
+    print(
+        "Password Generator"
+    )
 
-    # ======================================================
-    # LENGTH
-    # ======================================================
+    print(LINE)
 
     while True:
 
-        value = input(
-            "Password length [16]: "
-        ).strip()
+        try:
+
+            value = input(
+                "Password length [16]: "
+            ).strip()
+
+        except KeyboardInterrupt:
+
+            print()
+
+            print(
+                "Operation cancelled."
+            )
+
+            return None
+
+        except EOFError:
+
+            print()
+
+            print(
+                "Operation cancelled."
+            )
+
+            return None
 
         if not value:
 
@@ -482,7 +660,9 @@ def get_generator_settings():
 
         try:
 
-            length = int(value)
+            length = int(
+                value
+            )
 
         except ValueError:
 
@@ -509,10 +689,6 @@ def get_generator_settings():
             continue
 
         break
-
-    # ======================================================
-    # CHARACTER TYPES
-    # ======================================================
 
     print()
 
@@ -555,11 +731,22 @@ def get_generator_settings():
         return None
 
     return {
-        "length": length,
-        "use_uppercase": use_uppercase,
-        "use_lowercase": use_lowercase,
-        "use_numbers": use_numbers,
-        "use_symbols": use_symbols
+
+        "length":
+            length,
+
+        "use_uppercase":
+            use_uppercase,
+
+        "use_lowercase":
+            use_lowercase,
+
+        "use_numbers":
+            use_numbers,
+
+        "use_symbols":
+            use_symbols
+
     }
 
 
@@ -570,29 +757,31 @@ def get_generator_settings():
 def create_generator(settings):
 
     return PasswordGenerator(
-        length=settings["length"],
-        use_uppercase=settings["use_uppercase"],
-        use_lowercase=settings["use_lowercase"],
-        use_numbers=settings["use_numbers"],
-        use_symbols=settings["use_symbols"]
+
+        length=settings[
+            "length"
+        ],
+
+        use_uppercase=settings[
+            "use_uppercase"
+        ],
+
+        use_lowercase=settings[
+            "use_lowercase"
+        ],
+
+        use_numbers=settings[
+            "use_numbers"
+        ],
+
+        use_symbols=settings[
+            "use_symbols"
+        ]
     )
 
 
 # ==========================================================
-# ANALYZE GENERATED PASSWORD
-# ==========================================================
-
-def analyze_generated_password(password):
-
-    analyzer = PasswordAnalyzer(
-        password
-    )
-
-    return analyzer.analyze()
-
-
-# ==========================================================
-# GENERATE SINGLE PASSWORD
+# GENERATE PASSWORD
 # ==========================================================
 
 def generate_password():
@@ -600,6 +789,7 @@ def generate_password():
     settings = get_generator_settings()
 
     if settings is None:
+
         return
 
     try:
@@ -620,28 +810,47 @@ def generate_password():
 
         return
 
-    # ======================================================
-    # DISPLAY PASSWORD
-    # ======================================================
-
     print()
 
-    print("Generated Password")
+    print(
+        "Generated Password"
+    )
+
     print(LINE)
 
-    print(password)
-
-    # ======================================================
-    # SECURITY ANALYSIS
-    # ======================================================
-
-    result = analyze_generated_password(
+    print(
         password
     )
 
+    result = PasswordAnalyzer(
+        password
+    ).analyze()
+
+    # ======================================================
+    # SAVE GENERATED PASSWORD HISTORY
+    # ======================================================
+
+    try:
+
+        add_history(
+            result,
+            action="generated"
+        )
+
+    except Exception as error:
+
+        print()
+
+        print(
+            f"Warning: Could not save history: {error}"
+        )
+
     print()
 
-    print("Security Analysis")
+    print(
+        "Security Analysis"
+    )
+
     print(LINE)
 
     print(
@@ -689,24 +898,56 @@ def generate_password():
 
 
 # ==========================================================
-# GET PASSWORD COUNT
+# BATCH GENERATOR
 # ==========================================================
 
-def get_password_count():
+def generate_batch_passwords():
+
+    settings = get_generator_settings()
+
+    if settings is None:
+
+        return
 
     while True:
 
-        value = input(
-            "How many passwords [5]: "
-        ).strip()
+        try:
+
+            value = input(
+                "How many passwords [5]: "
+            ).strip()
+
+        except KeyboardInterrupt:
+
+            print()
+
+            print(
+                "Operation cancelled."
+            )
+
+            return
+
+        except EOFError:
+
+            print()
+
+            print(
+                "Operation cancelled."
+            )
+
+            return
 
         if not value:
 
-            return 5
+            count = 5
+
+            break
 
         try:
 
-            count = int(value)
+            count = int(
+                value
+            )
 
         except ValueError:
 
@@ -732,23 +973,7 @@ def get_password_count():
 
             continue
 
-        return count
-
-
-# ==========================================================
-# GENERATE MULTIPLE PASSWORDS
-# ==========================================================
-
-def generate_batch_passwords():
-
-    settings = get_generator_settings()
-
-    if settings is None:
-        return
-
-    print()
-
-    count = get_password_count()
+        break
 
     try:
 
@@ -770,13 +995,12 @@ def generate_batch_passwords():
 
         return
 
-    # ======================================================
-    # RESULTS
-    # ======================================================
-
     print()
 
-    print("Generated Passwords")
+    print(
+        "Generated Passwords"
+    )
+
     print(LINE)
 
     for index, password in enumerate(
@@ -784,16 +1008,36 @@ def generate_batch_passwords():
         start=1
     ):
 
-        result = analyze_generated_password(
+        result = PasswordAnalyzer(
             password
-        )
+        ).analyze()
 
-        rating = result["rating"]
-        score = result["score"]
+        rating = result[
+            "rating"
+        ]
+
+        score = result[
+            "score"
+        ]
 
         icon = get_rating_icon(
             rating
         )
+
+        # ==================================================
+        # SAVE HISTORY
+        # ==================================================
+
+        try:
+
+            add_history(
+                result,
+                action="generated"
+            )
+
+        except Exception:
+
+            pass
 
         print()
 
@@ -806,10 +1050,6 @@ def generate_batch_passwords():
             f"{rating} "
             f"({score}/100)"
         )
-
-    # ======================================================
-    # PRIVACY
-    # ======================================================
 
     print()
 
@@ -824,7 +1064,546 @@ def generate_batch_passwords():
 
 
 # ==========================================================
-# MENU
+# EXPORT REPORT
+# ==========================================================
+
+def export_report():
+
+    print()
+
+    print(
+        "Security Report"
+    )
+
+    print(LINE)
+
+    print(
+        "Analyze a password and export "
+        "the security report."
+    )
+
+    print()
+
+    try:
+
+        password = getpass.getpass(
+            "Enter password: "
+        )
+
+    except KeyboardInterrupt:
+
+        print()
+
+        print(
+            "Operation cancelled."
+        )
+
+        return
+
+    except EOFError:
+
+        print()
+
+        print(
+            "Operation cancelled."
+        )
+
+        return
+
+    if not password:
+
+        print()
+
+        print(
+            "Password cannot be empty."
+        )
+
+        return
+
+    analyzer = PasswordAnalyzer(
+        password
+    )
+
+    result = analyzer.analyze()
+
+    print()
+
+    print(
+        "Report Format"
+    )
+
+    print(LINE)
+
+    print(
+        "1. JSON"
+    )
+
+    print(
+        "2. TXT"
+    )
+
+    print(
+        "3. JSON + TXT"
+    )
+
+    print()
+
+    try:
+
+        choice = input(
+            "Select format: "
+        ).strip()
+
+    except KeyboardInterrupt:
+
+        print()
+
+        print(
+            "Operation cancelled."
+        )
+
+        return
+
+    except EOFError:
+
+        print()
+
+        print(
+            "Operation cancelled."
+        )
+
+        return
+
+    try:
+
+        if choice == "1":
+
+            filepath = save_json_report(
+                result
+            )
+
+            print()
+
+            print(
+                "✓ JSON report created."
+            )
+
+            print(
+                f"File: {filepath}"
+            )
+
+        elif choice == "2":
+
+            filepath = save_text_report(
+                result
+            )
+
+            print()
+
+            print(
+                "✓ Text report created."
+            )
+
+            print(
+                f"File: {filepath}"
+            )
+
+        elif choice == "3":
+
+            json_path = save_json_report(
+                result
+            )
+
+            txt_path = save_text_report(
+                result
+            )
+
+            print()
+
+            print(
+                "✓ Reports created successfully."
+            )
+
+            print()
+
+            print(
+                f"JSON: {json_path}"
+            )
+
+            print(
+                f"TXT:  {txt_path}"
+            )
+
+        else:
+
+            print()
+
+            print(
+                "Invalid report format."
+            )
+
+            return
+
+    except OSError as error:
+
+        print()
+
+        print(
+            f"Error creating report: {error}"
+        )
+
+        return
+
+    except Exception as error:
+
+        print()
+
+        print(
+            f"Unexpected error: {error}"
+        )
+
+        return
+
+    print()
+
+    print(
+        "Privacy: The password itself "
+        "is never written to the report."
+    )
+
+    print()
+
+
+# ==========================================================
+# HISTORY
+# ==========================================================
+
+def show_history():
+
+    while True:
+
+        print()
+
+        print(
+            "Security History"
+        )
+
+        print(LINE)
+
+        history = load_history()
+
+        if not history:
+
+            print(
+                "No security history found."
+            )
+
+            print()
+
+            print(
+                "Every password analysis will "
+                "appear here automatically."
+            )
+
+        else:
+
+            print(
+                f"Total records: {len(history)}"
+            )
+
+            print()
+
+            # ==================================================
+            # SHOW HISTORY
+            # ==================================================
+
+            for index, entry in enumerate(
+                reversed(history),
+                start=1
+            ):
+
+                action = entry.get(
+                    "action",
+                    "analysis"
+                )
+
+                action_text = (
+                    "Analysis"
+                    if action == "analysis"
+                    else
+                    "Generated"
+                )
+
+                rating = entry.get(
+                    "rating",
+                    "UNKNOWN"
+                )
+
+                score = entry.get(
+                    "score",
+                    0
+                )
+
+                entropy = entry.get(
+                    "entropy",
+                    0
+                )
+
+                length = entry.get(
+                    "length",
+                    0
+                )
+
+                crack = entry.get(
+                    "crack_resistance",
+                    "Unknown"
+                )
+
+                icon = get_rating_icon(
+                    rating
+                )
+
+                print(
+                    f"{index:02d}. "
+                    f"{format_entry_date(entry)}"
+                )
+
+                print(
+                    f"    Type: {action_text}"
+                )
+
+                print(
+                    f"    Length: {length} characters"
+                )
+
+                print(
+                    f"    Entropy: {entropy} bits"
+                )
+
+                print(
+                    f"    Strength: "
+                    f"{strength_bar(score)} "
+                    f"{score}/100"
+                )
+
+                print(
+                    f"    Rating: "
+                    f"{icon} {rating}"
+                )
+
+                print(
+                    f"    Crack resistance: {crack}"
+                )
+
+                patterns = entry.get(
+                    "detected_patterns",
+                    []
+                )
+
+                if patterns:
+
+                    print(
+                        "    Patterns:"
+                    )
+
+                    for pattern in patterns:
+
+                        print(
+                            f"      ⚠ {pattern}"
+                        )
+
+                print()
+
+                print(LINE)
+
+            # ==================================================
+            # PRIVACY
+            # ==================================================
+
+            print()
+
+            print(
+                f"Privacy: {history_privacy_note()}"
+            )
+
+        # ======================================================
+        # HISTORY MENU
+        # ======================================================
+
+        print()
+
+        print(
+            "History Options"
+        )
+
+        print(LINE)
+
+        print(
+            "1. Back to Main Menu"
+        )
+
+        print(
+            "2. Delete Last Record"
+        )
+
+        print(
+            "3. Clear All History"
+        )
+
+        print()
+
+        try:
+
+            choice = input(
+                "Select option: "
+            ).strip()
+
+        except KeyboardInterrupt:
+
+            print()
+
+            return
+
+        except EOFError:
+
+            print()
+
+            return
+
+        # ======================================================
+        # BACK
+        # ======================================================
+
+        if choice == "1":
+
+            return
+
+        # ======================================================
+        # DELETE LAST
+        # ======================================================
+
+        elif choice == "2":
+
+            if not history:
+
+                print()
+
+                print(
+                    "There is no history to delete."
+                )
+
+                continue
+
+            try:
+
+                confirm = ask_yes_no(
+                    "Delete the latest history record?",
+                    False
+                )
+
+            except Exception:
+
+                confirm = False
+
+            if not confirm:
+
+                print()
+
+                print(
+                    "Operation cancelled."
+                )
+
+                continue
+
+            if delete_last_entry():
+
+                print()
+
+                print(
+                    "✓ Latest history record deleted."
+                )
+
+            else:
+
+                print()
+
+                print(
+                    "Could not delete history record."
+                )
+
+        # ======================================================
+        # CLEAR ALL
+        # ======================================================
+
+        elif choice == "3":
+
+            if not history:
+
+                print()
+
+                print(
+                    "History is already empty."
+                )
+
+                continue
+
+            print()
+
+            print(
+                "⚠ This will permanently delete "
+                "all PassGuard history."
+            )
+
+            print(
+                "⚠ Passwords themselves are not stored."
+            )
+
+            print()
+
+            confirm = ask_yes_no(
+                "Are you sure?",
+                False
+            )
+
+            if not confirm:
+
+                print()
+
+                print(
+                    "Operation cancelled."
+                )
+
+                continue
+
+            try:
+
+                clear_history()
+
+                print()
+
+                print(
+                    "✓ All history has been deleted."
+                )
+
+            except OSError as error:
+
+                print()
+
+                print(
+                    f"Error clearing history: {error}"
+                )
+
+        else:
+
+            print()
+
+            print(
+                "Invalid option."
+            )
+
+
+# ==========================================================
+# MAIN MENU
 # ==========================================================
 
 def show_menu():
@@ -842,7 +1621,15 @@ def show_menu():
     )
 
     print(
-        "4. Exit"
+        "4. Export Security Report"
+    )
+
+    print(
+        "5. Security History"
+    )
+
+    print(
+        "6. Exit"
     )
 
     print()
@@ -869,11 +1656,29 @@ def main():
         except KeyboardInterrupt:
 
             print()
+
             print()
+
             print(
                 "Thank you for using PassGuard. 🔐"
             )
+
             print()
+
+            break
+
+        except EOFError:
+
+            print()
+
+            print()
+
+            print(
+                "Thank you for using PassGuard. 🔐"
+            )
+
+            print()
+
             break
 
         # ==================================================
@@ -901,10 +1706,26 @@ def main():
             generate_batch_passwords()
 
         # ==================================================
-        # EXIT
+        # REPORT
         # ==================================================
 
         elif choice == "4":
+
+            export_report()
+
+        # ==================================================
+        # HISTORY
+        # ==================================================
+
+        elif choice == "5":
+
+            show_history()
+
+        # ==================================================
+        # EXIT
+        # ==================================================
+
+        elif choice == "6":
 
             print()
 
@@ -926,7 +1747,7 @@ def main():
 
             print(
                 "Invalid option. "
-                "Please select 1, 2, 3 or 4."
+                "Please select 1, 2, 3, 4, 5 or 6."
             )
 
             print()
