@@ -1,37 +1,26 @@
 # ==========================================================
 # PASSGUARD
-# PASSWORD SECURITY ANALYZER
+# PASSWORD SECURITY SUITE
 # ==========================================================
 
 import getpass
 
 from analyzer import PasswordAnalyzer
+from generator import PasswordGenerator
 
 
 # ==========================================================
-# COLORS
+# CONSTANTS
 # ==========================================================
 
-RESET = "\033[0m"
-
-GREEN = "\033[92m"
-
-RED = "\033[91m"
-
-YELLOW = "\033[93m"
-
-CYAN = "\033[96m"
-
-BLUE = "\033[94m"
-
-WHITE = "\033[97m"
+LINE = "─" * 38
 
 
 # ==========================================================
 # HEADER
 # ==========================================================
 
-def print_header():
+def show_header():
 
     print()
 
@@ -44,7 +33,7 @@ def print_header():
     )
 
     print(
-        "║     Password Security Analyzer      ║"
+        "║     Password Security Suite         ║"
     )
 
     print(
@@ -55,20 +44,58 @@ def print_header():
 
 
 # ==========================================================
-# BOOLEAN DISPLAY
+# YES / NO
 # ==========================================================
 
-def display_boolean(value):
+def ask_yes_no(question, default=True):
 
-    if value:
+    while True:
 
-        return (
-            f"{GREEN}✓{RESET}"
+        default_text = (
+            "Y/n"
+            if default
+            else
+            "y/N"
         )
 
-    return (
-        f"{RED}✗{RESET}"
-    )
+        answer = input(
+            f"{question} [{default_text}]: "
+        ).strip().lower()
+
+        if not answer:
+
+            return default
+
+        if answer in (
+            "y",
+            "yes"
+        ):
+
+            return True
+
+        if answer in (
+            "n",
+            "no"
+        ):
+
+            return False
+
+        print(
+            "Please enter Y or N."
+        )
+
+
+# ==========================================================
+# FORMAT SEARCH SPACE
+# ==========================================================
+
+def format_search_space(value):
+
+    if value == 0:
+
+        return "0"
+
+    return f"{value:.2e}"
 
 
 # ==========================================================
@@ -77,78 +104,34 @@ def display_boolean(value):
 
 def strength_bar(score):
 
-    total_blocks = 20
+    total = 20
 
     filled = round(
-        score / 100 * total_blocks
+        score / 5
     )
 
     filled = max(
         0,
         min(
-            total_blocks,
+            total,
             filled
         )
-    )
-
-    empty = (
-        total_blocks
-        -
-        filled
     )
 
     return (
         "█" * filled
         +
-        "░" * empty
+        "░" * (
+            total - filled
+        )
     )
 
 
 # ==========================================================
-# RATING COLOR
+# SHOW ANALYSIS
 # ==========================================================
 
-def rating_color(rating):
-
-    if rating == "VERY WEAK":
-
-        return RED
-
-    if rating == "WEAK":
-
-        return RED
-
-    if rating == "MEDIUM":
-
-        return YELLOW
-
-    if rating == "STRONG":
-
-        return GREEN
-
-    return GREEN
-
-
-# ==========================================================
-# SEARCH SPACE FORMAT
-# ==========================================================
-
-def format_search_space(value):
-
-    if value <= 0:
-
-        return "0"
-
-    return (
-        f"{value:.2e}"
-    )
-
-
-# ==========================================================
-# SECURITY ANALYSIS
-# ==========================================================
-
-def print_analysis(result):
+def show_analysis(result):
 
     checks = result["checks"]
 
@@ -158,79 +141,81 @@ def print_analysis(result):
         "Security Analysis"
     )
 
-    print(
-        "──────────────────────────────────────"
-    )
+    print(LINE)
 
     print(
         f"Length              "
-        f"{len(password)} characters"
+        f"{result['length']} characters"
     )
 
     print(
         f"Uppercase           "
-        f"{display_boolean(checks.get('uppercase', False))}"
+        f"{'✓' if checks['uppercase'] else '✗'}"
     )
 
     print(
         f"Lowercase           "
-        f"{display_boolean(checks.get('lowercase', False))}"
+        f"{'✓' if checks['lowercase'] else '✗'}"
     )
 
     print(
         f"Numbers             "
-        f"{display_boolean(checks.get('numbers', False))}"
+        f"{'✓' if checks['numbers'] else '✗'}"
     )
 
     print(
         f"Symbols             "
-        f"{display_boolean(checks.get('symbols', False))}"
+        f"{'✓' if checks['symbols'] else '✗'}"
     )
 
     print(
         f"Character diversity "
-        f"{display_boolean(checks.get('diversity', False))}"
+        f"{'✓' if checks['diversity'] else '✗'}"
     )
 
     print(
         f"Common password     "
-        f"{display_boolean(not checks.get('common', True))}"
+        f"{'✓' if checks['common'] else '✗'}"
     )
 
     print(
         f"Patterns            "
-        f"{display_boolean(not checks.get('patterns', True))}"
+        f"{'✓' if checks['patterns'] else '✗'}"
     )
 
     print(
         f"Repetition          "
-        f"{display_boolean(not checks.get('repetition', True))}"
+        f"{'✓' if checks['repetition'] else '✗'}"
     )
 
     print(
         f"Sequences           "
-        f"{display_boolean(not checks.get('sequences', True))}"
+        f"{'✓' if checks['sequences'] else '✗'}"
     )
 
     print(
         f"Predictability      "
-        f"{display_boolean(not checks.get('predictability', True))}"
+        f"{'✓' if checks['predictability'] else '✗'}"
     )
 
     print(
         f"Keyboard pattern    "
-        f"{display_boolean(not checks.get('keyboard', True))}"
+        f"{'✓' if checks['keyboard'] else '✗'}"
     )
 
     print(
         f"Leetspeak           "
-        f"{display_boolean(not checks.get('leetspeak', True))}"
+        f"{'✓' if checks['leetspeak'] else '✗'}"
     )
 
     print(
         f"Year pattern        "
-        f"{display_boolean(not checks.get('year', True))}"
+        f"{'✓' if checks['year'] else '✗'}"
     )
+
+    # ======================================================
+    # ENTROPY
+    # ======================================================
 
     print()
 
@@ -254,72 +239,54 @@ def print_analysis(result):
         f"{result['crack_resistance']}"
     )
 
+    # ======================================================
+    # CRACK TIME
+    # ======================================================
 
-# ==========================================================
-# CRACK TIME
-# ==========================================================
+    if "crack_times" in result:
 
-def print_crack_times(result):
+        print()
 
-    crack_times = result[
-        "crack_times"
-    ]
+        print(
+            "Crack Time Estimate"
+        )
 
-    print()
+        print(LINE)
 
-    print(
-        "Crack Time Estimate"
-    )
+        print(
+            "Estimated average time to exhaust half "
+            "of the search space."
+        )
 
-    print(
-        "──────────────────────────────────────"
-    )
+        print()
 
-    print(
-        "Estimated average time to exhaust "
-        "half of the search space."
-    )
+        crack_times = result[
+            "crack_times"
+        ]
 
-    print()
+        print(
+            f"Online attack       "
+            f"{crack_times['online']}"
+        )
 
-    print(
-        f"Online attack       "
-        f"{crack_times['online']}"
-    )
+        print(
+            f"Slow offline attack "
+            f"{crack_times['slow_offline']}"
+        )
 
-    print(
-        f"Slow offline attack "
-        f"{crack_times['slow_offline']}"
-    )
+        print(
+            f"Fast offline attack "
+            f"{crack_times['fast_offline']}"
+        )
 
-    print(
-        f"Fast offline attack "
-        f"{crack_times['fast_offline']}"
-    )
+        print(
+            f"Massive GPU attack  "
+            f"{crack_times['massive_gpu']}"
+        )
 
-    print(
-        f"Massive GPU attack  "
-        f"{crack_times['massive_gpu']}"
-    )
-
-
-# ==========================================================
-# STRENGTH
-# ==========================================================
-
-def print_strength(result):
-
-    score = result[
-        "score"
-    ]
-
-    rating = result[
-        "rating"
-    ]
-
-    color = rating_color(
-        rating
-    )
+    # ======================================================
+    # STRENGTH
+    # ======================================================
 
     print()
 
@@ -328,101 +295,85 @@ def print_strength(result):
     )
 
     print(
-        f"{strength_bar(score)} "
-        f"{score}/100"
+        f"{strength_bar(result['score'])} "
+        f"{result['score']}/100"
     )
 
     print()
 
     print(
-        f"Rating: "
-        f"{color}{rating}{RESET}"
+        f"Rating: {result['rating']}"
     )
 
+    # ======================================================
+    # DETECTED PATTERNS
+    # ======================================================
 
-# ==========================================================
-# DETECTED PATTERNS
-# ==========================================================
-
-def print_detected_patterns(result):
-
-    patterns = result[
+    detected = result[
         "detected_patterns"
     ]
 
-    if not patterns:
+    if detected:
 
-        return
-
-    print()
-
-    print(
-        "Detected patterns"
-    )
-
-    print(
-        "──────────────────────────────────────"
-    )
-
-    for pattern in patterns:
+        print()
 
         print(
-            f"⚠ {pattern}"
+            "Detected patterns"
         )
 
+        print(LINE)
 
-# ==========================================================
-# RECOMMENDATIONS
-# ==========================================================
+        for pattern in detected:
 
-def print_recommendations(result):
+            print(
+                f"⚠ {pattern}"
+            )
+
+    # ======================================================
+    # RECOMMENDATIONS
+    # ======================================================
 
     issues = result[
         "issues"
     ]
 
-    if not issues:
+    if issues:
 
         print()
 
         print(
-            f"{GREEN}✓ No obvious weaknesses detected.{RESET}"
+            "Recommendations"
         )
 
-        return
+        print(LINE)
 
-    print()
+        unique_issues = []
 
-    print(
-        "Recommendations"
-    )
+        for issue in issues:
 
-    print(
-        "──────────────────────────────────────"
-    )
+            if issue not in unique_issues:
 
-    unique_issues = []
+                unique_issues.append(
+                    issue
+                )
 
-    for issue in issues:
+        for issue in unique_issues:
 
-        if issue not in unique_issues:
-
-            unique_issues.append(
-                issue
+            print(
+                f"→ {issue}"
             )
 
-    for issue in unique_issues:
+    else:
+
+        print()
 
         print(
-            f"→ {issue}"
+            "✓ No obvious weaknesses detected."
         )
 
-
-# ==========================================================
-# PRIVACY
-# ==========================================================
-
-def print_privacy():
+    # ======================================================
+    # PRIVACY
+    # ======================================================
 
     print()
 
@@ -435,36 +386,32 @@ def print_privacy():
 
 
 # ==========================================================
-# MAIN
+# ANALYZE PASSWORD
 # ==========================================================
 
-def main():
+def analyze_password():
 
-    global password
+    print()
 
-    print_header()
+    print(
+        "Password Analysis"
+    )
 
-    try:
+    print(LINE)
 
-        password = getpass.getpass(
-            "Enter password: "
-        )
+    print(
+        "Enter your password."
+    )
 
-    except KeyboardInterrupt:
+    print(
+        "The password is processed locally."
+    )
 
-        print()
+    print()
 
-        print(
-            "Analysis cancelled."
-        )
-
-        return
-
-    except Exception:
-
-        password = input(
-            "Enter password: "
-        )
+    password = getpass.getpass(
+        "Enter password: "
+    )
 
     if not password:
 
@@ -482,27 +429,544 @@ def main():
 
     result = analyzer.analyze()
 
-    print_analysis(
+    if "length" not in result:
+
+        result["length"] = len(
+            password
+        )
+
+    show_analysis(
         result
     )
 
-    print_crack_times(
-        result
+
+# ==========================================================
+# GENERATOR SETTINGS
+# ==========================================================
+
+def get_generator_settings():
+
+    print()
+
+    print(
+        "Password Generator"
     )
 
-    print_strength(
-        result
+    print(LINE)
+
+    # ======================================================
+    # LENGTH
+    # ======================================================
+
+    while True:
+
+        value = input(
+            "Password length [16]: "
+        ).strip()
+
+        if not value:
+
+            length = 16
+
+            break
+
+        try:
+
+            length = int(
+                value
+            )
+
+        except ValueError:
+
+            print(
+                "Please enter a valid number."
+            )
+
+            continue
+
+        if length < 8:
+
+            print(
+                "Minimum length is 8."
+            )
+
+            continue
+
+        if length > 128:
+
+            print(
+                "Maximum length is 128."
+            )
+
+            continue
+
+        break
+
+    # ======================================================
+    # CHARACTER TYPES
+    # ======================================================
+
+    print()
+
+    use_uppercase = ask_yes_no(
+        "Use uppercase letters?",
+        True
     )
 
-    print_detected_patterns(
-        result
+    use_lowercase = ask_yes_no(
+        "Use lowercase letters?",
+        True
     )
 
-    print_recommendations(
-        result
+    use_numbers = ask_yes_no(
+        "Use numbers?",
+        True
     )
 
-    print_privacy()
+    use_symbols = ask_yes_no(
+        "Use symbols?",
+        True
+    )
+
+    if not any(
+        [
+            use_uppercase,
+            use_lowercase,
+            use_numbers,
+            use_symbols
+        ]
+    ):
+
+        print()
+
+        print(
+            "At least one character type "
+            "must be enabled."
+        )
+
+        return None
+
+    return {
+
+        "length":
+            length,
+
+        "use_uppercase":
+            use_uppercase,
+
+        "use_lowercase":
+            use_lowercase,
+
+        "use_numbers":
+            use_numbers,
+
+        "use_symbols":
+            use_symbols
+
+    }
+
+
+# ==========================================================
+# GET RATING ICON
+# ==========================================================
+
+def get_rating_icon(rating):
+
+    rating = rating.upper()
+
+    if rating == "VERY STRONG":
+
+        return "🟢"
+
+    if rating == "STRONG":
+
+        return "🟢"
+
+    if rating == "MEDIUM":
+
+        return "🟡"
+
+    if rating == "WEAK":
+
+        return "🟠"
+
+    return "🔴"
+
+
+# ==========================================================
+# GENERATE PASSWORD
+# ==========================================================
+
+def generate_password():
+
+    settings = (
+        get_generator_settings()
+    )
+
+    if settings is None:
+
+        return
+
+    try:
+
+        generator = PasswordGenerator(
+            length=settings["length"],
+            use_uppercase=settings[
+                "use_uppercase"
+            ],
+            use_lowercase=settings[
+                "use_lowercase"
+            ],
+            use_numbers=settings[
+                "use_numbers"
+            ],
+            use_symbols=settings[
+                "use_symbols"
+            ],
+        )
+
+        password = generator.generate()
+
+    except ValueError as error:
+
+        print()
+
+        print(
+            f"Error: {error}"
+        )
+
+        return
+
+    # ======================================================
+    # DISPLAY PASSWORD
+    # ======================================================
+
+    print()
+
+    print(
+        "Generated Password"
+    )
+
+    print(LINE)
+
+    print(
+        password
+    )
+
+    # ======================================================
+    # ANALYZE GENERATED PASSWORD
+    # ======================================================
+
+    analyzer = PasswordAnalyzer(
+        password
+    )
+
+    result = analyzer.analyze()
+
+    if "length" not in result:
+
+        result["length"] = len(
+            password
+        )
+
+    print()
+
+    print(
+        "Security Analysis"
+    )
+
+    print(LINE)
+
+    print(
+        f"Length:             "
+        f"{result['length']}"
+    )
+
+    print(
+        f"Entropy:            "
+        f"{result['entropy']} bits"
+    )
+
+    print(
+        f"Crack resistance:   "
+        f"{result['crack_resistance']}"
+    )
+
+    print()
+
+    print(
+        f"Strength: "
+        f"{strength_bar(result['score'])} "
+        f"{result['score']}/100"
+    )
+
+    print()
+
+    print(
+        f"Rating: "
+        f"{get_rating_icon(result['rating'])} "
+        f"{result['rating']}"
+    )
+
+    print()
+
+    print(
+        "⚠ Keep this password secure."
+    )
+
+    print(
+        "⚠ PassGuard does not store generated passwords."
+    )
+
+    print()
+
+
+# ==========================================================
+# BATCH PASSWORD GENERATOR
+# ==========================================================
+
+def generate_batch_passwords():
+
+    settings = (
+        get_generator_settings()
+    )
+
+    if settings is None:
+
+        return
+
+    # ======================================================
+    # COUNT
+    # ======================================================
+
+    while True:
+
+        value = input(
+            "How many passwords [5]: "
+        ).strip()
+
+        if not value:
+
+            count = 5
+
+            break
+
+        try:
+
+            count = int(
+                value
+            )
+
+        except ValueError:
+
+            print(
+                "Please enter a valid number."
+            )
+
+            continue
+
+        if count < 1:
+
+            print(
+                "Minimum is 1."
+            )
+
+            continue
+
+        if count > 50:
+
+            print(
+                "Maximum is 50."
+            )
+
+            continue
+
+        break
+
+    # ======================================================
+    # GENERATOR
+    # ======================================================
+
+    try:
+
+        generator = PasswordGenerator(
+            length=settings["length"],
+            use_uppercase=settings[
+                "use_uppercase"
+            ],
+            use_lowercase=settings[
+                "use_lowercase"
+            ],
+            use_numbers=settings[
+                "use_numbers"
+            ],
+            use_symbols=settings[
+                "use_symbols"
+            ],
+        )
+
+        passwords = generator.generate_many(
+            count
+        )
+
+    except ValueError as error:
+
+        print()
+
+        print(
+            f"Error: {error}"
+        )
+
+        return
+
+    # ======================================================
+    # RESULTS
+    # ======================================================
+
+    print()
+
+    print(
+        "Generated Passwords"
+    )
+
+    print(LINE)
+
+    for index, password in enumerate(
+        passwords,
+        start=1
+    ):
+
+        analyzer = PasswordAnalyzer(
+            password
+        )
+
+        result = analyzer.analyze()
+
+        rating = result[
+            "rating"
+        ]
+
+        score = result[
+            "score"
+        ]
+
+        icon = get_rating_icon(
+            rating
+        )
+
+        print()
+
+        print(
+            f"{index:02d}. {password}"
+        )
+
+        print(
+            f"    {icon} {rating} "
+            f"({score}/100)"
+        )
+
+    # ======================================================
+    # PRIVACY
+    # ======================================================
+
+    print()
+
+    print(LINE)
+
+    print(
+        "Privacy: Generated passwords are "
+        "not stored or sent anywhere."
+    )
+
+    print()
+
+
+# ==========================================================
+# MAIN MENU
+# ==========================================================
+
+def main():
+
+    while True:
+
+        show_header()
+
+        print(
+            "1. Analyze Password"
+        )
+
+        print(
+            "2. Generate Password"
+        )
+
+        print(
+            "3. Generate Multiple Passwords"
+        )
+
+        print(
+            "4. Exit"
+        )
+
+        print()
+
+        choice = input(
+            "Select option: "
+        ).strip()
+
+        # ==================================================
+        # ANALYZE
+        # ==================================================
+
+        if choice == "1":
+
+            analyze_password()
+
+        # ==================================================
+        # SINGLE GENERATOR
+        # ==================================================
+
+        elif choice == "2":
+
+            generate_password()
+
+        # ==================================================
+        # BATCH GENERATOR
+        # ==================================================
+
+        elif choice == "3":
+
+            generate_batch_passwords()
+
+        # ==================================================
+        # EXIT
+        # ==================================================
+
+        elif choice == "4":
+
+            print()
+
+            print(
+                "Thank you for using PassGuard. 🔐"
+            )
+
+            print()
+
+            break
+
+        # ==================================================
+        # INVALID
+        # ==================================================
+
+        else:
+
+            print()
+
+            print(
+                "Invalid option. "
+                "Please select 1, 2, 3 or 4."
+            )
+
+            print()
 
 
 # ==========================================================
